@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+.venv/
+env/
+venv/
+.python-version
+
+# Django
+staticfiles/
+media/
+*.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Env
+.env
+
+# Migrations cache
+*/migrations/__pycache__/

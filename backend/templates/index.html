@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Магазин — главная{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <p class="badge">Новый релиз</p>
+            <h1>Продавайте товары онлайн без лишней головной боли</h1>
+            <p class="lead">Готовая платформа с каталогом, корзиной и оформлением заказов. Подключайте платёжные системы и развивайте бизнес.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="/admin/shop/product/add/">Добавить товар</a>
+                <a class="btn btn-outline" href="/api/products/">API каталога</a>
+            </div>
+            <ul class="hero-stats">
+                <li><span>100+</span> товаров в каталоге</li>
+                <li><span>24/7</span> мониторинг заказов</li>
+                <li><span>5 мин</span> до запуска магазина</li>
+            </ul>
+        </div>
+        <div class="hero-card">
+            <div class="card-header">
+                <span class="status-dot"></span>
+                Последний заказ
+            </div>
+            <div class="card-body">
+                <h3>Заказ #1024</h3>
+                <p>Покупатель: <strong>Мария Иванова</strong></p>
+                <p>Сумма: <strong>9 540 ₽</strong></p>
+                <p>Состояние: <span class="status-pill success">Оплачен</span></p>
+            </div>
+            <div class="card-footer">
+                <a href="/admin/shop/order/">Перейти к заказам →</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="features">
+    <div class="container section-header">
+        <h2>Что уже готово</h2>
+        <p>Архитектура на Django + DRF, полноценное API и админ-панель для управления магазином.</p>
+    </div>
+    <div class="container feature-grid">
+        <div class="feature-card">
+            <h3>Каталог товаров</h3>
+            <p>Категории, карточки с фотографиями, ценами и остатками. Управляйте ассортиментом из админки.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Корзина и заказы</h3>
+            <p>Корзина с подсчётом итогов и оформление заказа с контактами и доставкой.</p>
+        </div>
+        <div class="feature-card">
+            <h3>REST API</h3>
+            <p>Открытый API для подключения витрины, мобильного приложения или интеграций.</p>
+        </div>
+    </div>
+</section>
+
+<section id="products" class="catalog-preview">
+    <div class="container section-header">
+        <h2>Как выглядит карточка товара</h2>
+        <p>Загружайте изображения, управляйте ценами и остатками, отмечайте популярные позиции.</p>
+    </div>
+    <div class="container catalog-card">
+        <div class="catalog-gallery">
+            <div class="gallery-main"></div>
+            <div class="gallery-thumbs">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="catalog-info">
+            <h3>Наименование товара</h3>
+            <p class="price">4 990 ₽</p>
+            <p class="desc">Описание товара отображается здесь. Добавьте преимущества, характеристики и рекомендации.</p>
+            <div class="meta">
+                <span class="stock">В наличии</span>
+                <span class="sku">SKU: DEMO-001</span>
+            </div>
+            <div class="cta-inline">
+                <a class="btn btn-primary" href="/admin/shop/product/">Управлять товарами</a>
+                <a class="btn btn-outline" href="/api/carts/">Документация API</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="cta" class="cta">
+    <div class="container cta-inner">
+        <div>
+            <h2>Готовы подключить оплату и доставку?</h2>
+            <p>Свяжитесь с нами, и мы интегрируем платёжные сервисы, уведомления и витрину.</p>
+        </div>
+        <a class="btn btn-dark" href="mailto:shop@example.com">Написать нам</a>
+    </div>
+</section>
+{% endblock %}

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -105,6 +106,19 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+WHITENOISE_AUTOREFRESH = DEBUG
+WHITENOISE_USE_FINDERS = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -137,3 +151,9 @@ if not CORS_ALLOW_ALL_ORIGINS:
     ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+
+ALGOLIA_APP_ID = os.getenv("ALGOLIA_APP_ID", "")
+ALGOLIA_ADMIN_API_KEY = os.getenv("ALGOLIA_ADMIN_API_KEY", "")
+ALGOLIA_INDEX_NAME = os.getenv("ALGOLIA_INDEX_NAME", "shop_products")
+ALGOLIA_ENABLED = bool(ALGOLIA_APP_ID and ALGOLIA_ADMIN_API_KEY and ALGOLIA_INDEX_NAME)

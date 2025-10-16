@@ -11,7 +11,7 @@ from django.utils.text import slugify
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, allow_unicode=True)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -24,7 +24,8 @@ class Category(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            raw_slug = slugify(self.name, allow_unicode=True)
+            self.slug = raw_slug or f"category-{uuid4().hex[:8]}"
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
@@ -38,7 +39,7 @@ class Product(models.Model):
         on_delete=models.PROTECT,
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, allow_unicode=True)
     sku = models.CharField(max_length=64, unique=True)
     short_description = models.CharField(max_length=500, blank=True)
     description = models.TextField(blank=True)
@@ -56,7 +57,7 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(self.name)
+            base_slug = slugify(self.name, allow_unicode=True) or f"product-{uuid4().hex[:8]}"
             slug = base_slug
             counter = 1
             while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():

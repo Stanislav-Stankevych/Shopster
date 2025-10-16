@@ -1,53 +1,107 @@
-# Интернет-магазин на Django + DRF
+# Shopster — интернет-магазин на Django + Next.js
 
-## Что внутри
-- Django 5 + Django REST Framework
-- PostgreSQL и Redis (docker-compose)
-- Базовые модели каталога, корзины и заказов
-- Готовая админка с товарами, заказами и корзинами
-- Gunicorn в продакшн-контейнере, статические файлы и медиа через тома
+Модульный e-commerce стек: Django + DRF для API, PostgreSQL и Redis в Docker, фронтенд на Next.js 15, а также интеграция с Algolia для молниеносного поиска.
 
-## Быстрый старт в Docker
-1. Скопируйте пример переменных окружения и при необходимости измените значения:
+## Состав проекта
+- **Backend:** Django 5, DRF, PostgreSQL, Redis, Celery-ready инфраструктура, Whitenoise для статики.
+- **API и домен:** Каталог, изображения, корзина, заказы, REST-эндпоинты.
+- **Поиск:** Синхронизация товаров в индекс Algolia (готовая команда и сигналы).
+- **Frontend:** Next.js (app router, TypeScript, SSR/ISR), Algolia InstantSearch, страницы каталога, карточка товара.
+- **Инфраструктура:** Docker/Docker Compose, gunicorn, миграции при старте, демо-данные, готовые env-шаблоны.
+
+## Быстрый запуск backend (Docker)
+1. Скопируйте переменные окружения и при необходимости обновите значения:
    ```bash
    cp .env.example .env
    ```
-2. Поднимите окружение:
+2. Запустите контейнеры:
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
-3. Выполните начальные миграции и создайте суперпользователя (контейнер уже запускает миграции при старте, нужно только создать администратора):
+3. Создайте администратора:
    ```bash
-   docker-compose exec web python backend/manage.py createsuperuser
+   docker compose exec web python backend/manage.py createsuperuser
    ```
-4. Панель администратора будет доступна на `http://localhost:8000/admin/`, API — на `http://localhost:8000/api/`.
+4. (Опционально) Заполните демо-данными:
+   ```bash
+   docker compose exec web python backend/manage.py load_demo_data --reset
+   ```
+5. Панель администратора — `http://localhost:8000/admin/`, API — `http://localhost:8000/api/`.
+
+## Настройка Algolia
+Задайте ключи в `.env` (backend) и `.env.local` (frontend):
+```
+ALGOLIA_APP_ID=...
+ALGOLIA_ADMIN_API_KEY=...
+ALGOLIA_SEARCH_API_KEY=...    # search-only key, используется фронтендом
+ALGOLIA_INDEX_NAME=shop_products
+```
+
+Backend автоматически отправит товар в индекс при сохранении. Для полной переиндексации:
+```bash
+docker compose exec web python backend/manage.py sync_algolia_products --clear
+```
+
+### Elasticsearch альтернатива
+Если предпочтительнее Elasticsearch/Opensearch:
+1. Поднимите кластер (Docker, Managed Service).
+2. Добавьте клиент (например, `opensearch-py`) и создайте индекс `products`.
+3. Замените реализацию в `backend/shop/search.py` на отправку документов в Elasticsearch (bulk API).
+4. Фронтенд может обращаться к вашему поисковому API (серверному) или использовать Elastic App Search/Enterprise Search.
+
+## Frontend (Next.js 15)
+1. Перейдите в каталог `frontend` и установите зависимости:
+   ```bash
+   cd frontend
+   npm install
+   ```
+2. Создайте конфиг окружения:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   Обновите `NEXT_PUBLIC_API_BASE_URL` (по умолчанию `http://localhost:8000`) и параметры Algolia.
+3. Запуск dev-сервера:
+   ```bash
+   npm run dev
+   ```
+   Фронтенд доступен на `http://localhost:3000/`.
+4. Продакшн-сборка:
+   ```bash
+   npm run build
+   npm run start
+   ```
+
+### Что реализовано во фронтенде
+- Главная с хайлайтами и секцией «популярные товары» (данные из Django).
+- Страница `/products` с карточками, интегрированным Algolia InstantSearch.
+- Карточка товара `/products/[slug]`.
+- Базовый дизайн, адаптивная сетка, глобальные стили на CSS.
+
+## Синхронизация Next.js ↔ Django
+- API endpoint `NEXT_PUBLIC_API_BASE_URL/api/products/` используется для SSR/ISR.
+- Algolia InstantSearch получает данные напрямую из Algolia через `NEXT_PUBLIC_ALGOLIA_*`.
+- Для вебхуков/интеграции можно добавить фоновые задачи (Celery + Redis) и подписаться на события оплаты/доставки.
 
 ## Полезные команды
-- Выполнить тесты или отдельные команды Django:
-  ```bash
-  docker-compose exec web python backend/manage.py <command>
-  ```
-- Собрать статику вручную:
-  ```bash
-  docker-compose exec web python backend/manage.py collectstatic --noinput
-  ```
+```bash
+# миграции, статика, админка
+docker compose exec web python backend/manage.py migrate
+docker compose exec web python backend/manage.py collectstatic --noinput
 
-## Структура API
-- `GET /api/categories/` — список категорий (анонимам только чтение, создание/изменение для админов)
-- `GET /api/products/` — список товаров, включает изображения и категорию
-- `POST /api/carts/` — создать корзину, `GET /api/carts/<uuid>/` — получить содержимое
-- `POST /api/carts/<uuid>/items/` — добавить товар, `PATCH /api/carts/<uuid>/items/<id>/` — изменить количество, `DELETE ...` — удалить позицию
-- `POST /api/orders/` — оформить заказ на основе корзины (анонимам доступно), `GET /api/orders/` — список заказов текущего пользователя (администраторы видят все)
+# демо-данные
+docker compose exec web python backend/manage.py load_demo_data --reset
 
-## Деплой на сервер (общее описание)
-1. Установите Docker и docker-compose plugin (или используйте `docker compose`).
-2. Создайте `.env` с боевыми ключами (`DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, отключите `DJANGO_DEBUG`).
-3. Настройте домен и обратный прокси (например, Nginx) на проксирование к контейнеру `web:8000`.
-4. Подключите постоянное хранилище для томов `postgres_data`, `media_volume`, `static_volume`.
-5. Настройте резервное копирование базы данных PostgreSQL.
-6. Используйте процесс менеджер/CI для обновлений: `git pull`, `docker-compose pull`, `docker-compose up -d --build`.
+# синхронизация Algolia
+docker compose exec web python backend/manage.py sync_algolia_products
 
-## Следующие шаги
-- Подключить оплату (Stripe/ЮKassa) и вебхуки оплаты.
-- Добавить Celery для отложенных задач (уведомления, синхронизации).
-- Добавить витрину (SPA/SSR фронтенд) или шаблонный фронт на Django.
+# фронтенд
+cd frontend && npm run dev          # dev-режим
+cd frontend && npm run build        # production build
+cd frontend && npm run lint         # ESLint
+```
+
+## Дальнейшие шаги
+- Подключить платёжные провайдеры (Stripe, ЮKassa) и вебхуки.
+- Добавить аутентификацию пользователей, wishlists, отзывы.
+- Настроить CI/CD: прогон тестов, деплой контейнеров, прогрев кэшей.
+- Масштабировать поиск: реплики, фильтры, персонализация Algolia или миграция на собственный кластер Elasticsearch.

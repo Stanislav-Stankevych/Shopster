@@ -80,7 +80,6 @@ class CartItemSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
     subtotal = serializers.DecimalField(
-        source="subtotal",
         max_digits=10,
         decimal_places=2,
         read_only=True,
@@ -172,7 +171,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
     def validate_cart_id(self, value):
         if not Cart.objects.filter(id=value).exists():
-            raise serializers.ValidationError("Корзина не найдена.")
+            raise serializers.ValidationError("Cart not found.")
         return value
 
     def create(self, validated_data):

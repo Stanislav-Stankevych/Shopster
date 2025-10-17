@@ -20,7 +20,9 @@ const nextConfig = {
     NEXT_PUBLIC_APP_BUILD: process.env.NEXT_PUBLIC_APP_BUILD ?? "dev"
   },
   experimental: {
-    allowedOrigins: DEV_ALLOWED_ORIGINS
+    serverActions: {
+      allowedOrigins: DEV_ALLOWED_ORIGINS
+    }
   }
 };
 

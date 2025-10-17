@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -23,7 +23,7 @@ export default function SignUpPage() {
     const lastName = String(formData.get("last_name") || "");
 
     if (password !== passwordConfirm) {
-      setError("Пароли не совпадают.");
+      setError("Passwords do not match.");
       return;
     }
 
@@ -47,8 +47,8 @@ export default function SignUpPage() {
           const message =
             typeof data === "object" && data
               ? Object.values(data as Record<string, string[]>).flat().join(" ")
-              : "Не удалось создать аккаунт.";
-          setError(message || "Не удалось создать аккаунт.");
+              : "Could not create account.";
+          setError(message || "Could not create account.");
           return;
         }
 
@@ -59,7 +59,7 @@ export default function SignUpPage() {
         });
 
         if (result?.error) {
-          setError("Аккаунт создан, но вход не выполнен. Попробуйте войти вручную.");
+          setError("Account created but automatic sign-in failed. Please log in manually.");
           router.push("/signin");
           return;
         }
@@ -67,7 +67,7 @@ export default function SignUpPage() {
         router.push("/account");
       } catch (err) {
         console.error(err);
-        setError("Не удалось создать аккаунт. Попробуйте ещё раз.");
+        setError("Could not create account. Try again later.");
       }
     });
   };
@@ -75,11 +75,11 @@ export default function SignUpPage() {
   return (
     <section className="section">
       <div className="container auth-card">
-        <h1>Регистрация</h1>
-        <p className="auth-subtitle">Создайте аккаунт, чтобы оформлять заказы и управлять профилем.</p>
+        <h1>Create account</h1>
+        <p className="auth-subtitle">Sign up to manage your orders, addresses and discounts.</p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
-            <span>Логин</span>
+            <span>Username</span>
             <input name="username" type="text" placeholder="myshopper" required minLength={2} />
           </label>
           <label className="auth-field">
@@ -88,31 +88,32 @@ export default function SignUpPage() {
           </label>
           <div className="auth-field-inline">
             <label className="auth-field">
-              <span>Имя</span>
-              <input name="first_name" type="text" placeholder="Иван" />
+              <span>First name</span>
+              <input name="first_name" type="text" placeholder="John" />
             </label>
             <label className="auth-field">
-              <span>Фамилия</span>
-              <input name="last_name" type="text" placeholder="Иванов" />
+              <span>Last name</span>
+              <input name="last_name" type="text" placeholder="Doe" />
             </label>
           </div>
           <label className="auth-field">
-            <span>Пароль</span>
+            <span>Password</span>
             <input name="password" type="password" placeholder="••••••••" required minLength={6} />
           </label>
           <label className="auth-field">
-            <span>Повторите пароль</span>
+            <span>Confirm password</span>
             <input name="password_confirm" type="password" placeholder="••••••••" required minLength={6} />
           </label>
           {error && <p className="auth-error">{error}</p>}
           <button className="btn btn-primary auth-submit" type="submit" disabled={isPending}>
-            {isPending ? "Создаём..." : "Зарегистрироваться"}
+            {isPending ? "Creating..." : "Create account"}
           </button>
         </form>
         <p className="auth-hint">
-          Уже зарегистрированы? <Link href="/signin">Войдите</Link>
+          Already have an account? <Link href="/signin">Sign in</Link>
         </p>
       </div>
     </section>
   );
 }
+

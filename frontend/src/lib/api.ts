@@ -1,7 +1,10 @@
 import "server-only";
 import { Product } from "@/types/product";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE =
+  process.env.INTERNAL_API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:8000";
 
 export async function fetchProducts(limit = 6): Promise<Product[]> {
   const url = new URL("/api/products/", API_BASE);

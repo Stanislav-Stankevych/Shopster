@@ -4,6 +4,7 @@
 import "@/app/globals.css";
 import { AccountMenu } from "@/components/AccountMenu";
 import { AlgoliaSearch } from "@/components/AlgoliaSearch";
+import { CartBadge } from "@/components/CartBadge";
 import { AuthSessionProvider } from "@/components/SessionProvider";
 import { Inter } from "next/font/google";
 import Link from "next/link";
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
                     Admin
                   </a>
                 </nav>
+                <CartBadge />
                 <AccountMenu />
               </div>
             </div>

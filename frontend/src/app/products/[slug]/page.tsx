@@ -1,8 +1,10 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AddToCartButton } from "@/components/AddToCartButton";
 import { fetchProduct } from "@/lib/api";
+import { formatCurrency } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -17,33 +19,23 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   const mainImage = product.images.find((img) => img.is_main) ?? product.images[0];
-  const mailtoLink = `mailto:shop@example.com?subject=${encodeURIComponent(`Заказ ${product.name}`)}&body=${encodeURIComponent(
-    `Здравствуйте! Хочу купить товар "${product.name}" (SKU: ${product.sku}).`
-  )}`;
 
   return (
     <section className="section">
       <div className="container hero-grid">
         <div className="hero-card">
           <Link href="/products" className="btn btn-outline" style={{ marginBottom: "1.5rem", width: "fit-content" }}>
-            ← Назад в каталог
+            ← Back to catalog
           </Link>
           <h1>{product.name}</h1>
           <p className="lead">{product.description || product.short_description}</p>
           <div className="cta-buttons">
-            <span className="btn price-badge">
-              {Number(product.price).toLocaleString("ru-RU", {
-                style: "currency",
-                currency: product.currency ?? "RUB"
-              })}
-            </span>
-            <a className="btn btn-dark" href={mailtoLink}>
-              Купить
-            </a>
-            <span className="btn btn-outline">В наличии: {product.stock}</span>
+            <span className="btn price-badge">{formatCurrency(product.currency ?? "RUB", Number(product.price))}</span>
+            <AddToCartButton productId={product.id} />
+            <span className="btn btn-outline">In stock: {product.stock}</span>
           </div>
-          <p>Артикул: {product.sku}</p>
-          {product.category && <p>Категория: {product.category.name}</p>}
+          <p>SKU: {product.sku}</p>
+          {product.category && <p>Category: {product.category.name}</p>}
         </div>
         <div className="hero-card" style={{ padding: 0, overflow: "hidden" }}>
           {mainImage ? (
@@ -62,3 +54,4 @@ export default async function ProductDetailPage({ params }: Props) {
     </section>
   );
 }
+

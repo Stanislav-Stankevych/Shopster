@@ -1,5 +1,5 @@
-ï»¿
-# Shopster â€“ Django + Next.js commerce stack
+
+# Shopster – Django + Next.js commerce stack
 
 Modular e-commerce platform built with Django REST Framework, PostgreSQL, Redis, Algolia search and a Next.js 15 storefront.
 
@@ -7,7 +7,7 @@ Modular e-commerce platform built with Django REST Framework, PostgreSQL, Redis,
 - **Backend:** Django 5, DRF, PostgreSQL, Redis, Whitenoise for static files, JWT auth with SimpleJWT.
 - **API domain:** products, categories, images, carts, orders, authentication endpoints, password reset.
 - **Search:** Algolia indexing pipeline (ready to swap for Elasticsearch if required).
-- **Frontend:** Next.js app router, TypeScript, Algolia InstantSearch, credential auth via NextAuth.
+- **Frontend:** Next.js app router, TypeScript, Algolia InstantSearch, credential auth via NextAuth, cart & checkout (Zustand state).
 - **Infrastructure:** Docker/Docker Compose, gunicorn, demo data loader, `.env` templates.
 
 ## Backend quick start (Docker)
@@ -22,7 +22,7 @@ docker compose exec web python backend/manage.py createsuperuser
 docker compose exec web python backend/manage.py load_demo_data --reset
 ```
 - Admin panel: <http://localhost:8000/admin/>
-- API root (products, categories, carts, ordersâ€¦): <http://localhost:8000/api/>
+- API root (products, categories, carts, orders…): <http://localhost:8000/api/>
 - Auth endpoints:
   - `POST /api/auth/register/`
   - `POST /api/auth/login/` (username or email + password, returns JWT pair)
@@ -30,6 +30,13 @@ docker compose exec web python backend/manage.py load_demo_data --reset
   - `GET/PATCH /api/auth/me/`
   - `POST /api/auth/password/reset/`
   - `POST /api/auth/password/reset/confirm/`
+- Cart endpoints:
+  - `POST /api/carts/` — create anonymous cart
+  - `GET /api/carts/<uuid>/` — fetch cart with items
+  - `POST /api/carts/<uuid>/items/` — add product (or increase quantity)
+  - `PATCH /api/carts/<uuid>/items/<id>/`, `DELETE ...` — update/remove line items
+- Orders:
+  - `POST /api/orders/` — checkout (triggers confirmation email)
 
 ### Environment highlights
 ```
@@ -60,15 +67,18 @@ npm run dev
 - Sign in: `/signin`
 - Sign up: `/signup`
 - Account dashboard (requires auth): `/account`
+- Cart and checkout: `/cart`, `/checkout`, `/checkout/success`, password reset via `/forgot-password` and `/reset-password`
 
 `AUTH_SECRET` in `.env.local` powers NextAuth session encryption. The app uses the credential provider, talking to Django's JWT endpoints. Access/refresh tokens are stored in the NextAuth JWT and refreshed automatically.  
 Forgot/reset flow: `/forgot-password`, `/reset-password?uid=<uid>&token=<token>`.
 
 ## Configuration reference
-- `frontend/src/lib/config.ts` â€“ shared base URL for the Django API.
-- `frontend/src/lib/authOptions.ts` â€“ NextAuth setup, token refresh logic.
-- `frontend/src/app/api/auth/[...nextauth]/route.ts` â€“ NextAuth handler.
-- `frontend/src/components/AccountProfileForm.tsx` â€“ profile update form, PATCH `/api/auth/me/`.
+- `frontend/src/lib/config.ts` – shared base URL for the Django API.
+- `frontend/src/lib/authOptions.ts` - NextAuth setup, token refresh logic.
+- `frontend/src/lib/cartStore.ts` - Zustand store for cart and checkout state.
+- `frontend/src/app/api/auth/[...nextauth]/route.ts` - NextAuth handler.
+- `frontend/src/app/cart/page.tsx`, `/checkout/page.tsx` - cart UI and checkout form.
+- `frontend/src/components/AccountProfileForm.tsx` - profile update form, PATCH `/api/auth/me/`.
 
 ## Useful commands
 ```bash
@@ -89,9 +99,7 @@ cd frontend && npm run build
 ```
 
 ## Next steps
-- Hook up checkout flow (cart + order wizard) on the Next.js side.
-- Add payment integrations (Stripe, YooKassa, etc.) and webhook processing.
+- Integrate payments (Stripe, YooKassa, etc.) and webhook processing.
 - Introduce background jobs (Celery + Redis) for emails, stock sync, analytics.
 - Replace Algolia with Elasticsearch/OpenSearch if you need self-hosted search.
 - Automate CI/CD: tests, container builds, migrations on deploy.
-

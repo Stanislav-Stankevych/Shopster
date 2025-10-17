@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+import logging
+
+from django.conf import settings
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -17,6 +21,8 @@ from .serializers import (
     OrderSerializer,
     ProductSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -108,5 +114,38 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
         output_serializer = OrderSerializer(order, context=self.get_serializer_context())
+        self._send_confirmation_email(order)
         headers = self.get_success_headers(output_serializer.data)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def _send_confirmation_email(self, order: Order) -> None:
+        if not order.customer_email:
+            return
+        try:
+            items = order.items.select_related("product").all()
+            lines = [
+                f"- {item.product_name} x {item.quantity} - {item.line_total} {order.currency}"
+                for item in items
+            ]
+            items_block = "\n".join(lines) if lines else "Cart is empty."
+            message = (
+                f"Hello, {order.shipping_full_name}!\n\n"
+                f"Thank you for your order #{order.pk}.\n\n"
+                f"Order summary:\n{items_block}\n\n"
+                f"Subtotal: {order.subtotal_amount} {order.currency}\n"
+                f"Shipping: {order.shipping_amount} {order.currency}\n"
+                f"Total: {order.total_amount} {order.currency}\n\n"
+                "We will contact you shortly to confirm the details.\n"
+                "If you did not place this order, please ignore this email."
+            )
+            send_mail(
+                subject=f"Order confirmation #{order.pk}",
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[order.customer_email],
+                fail_silently=True,
+            )
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Failed to send order confirmation email: %s", exc)
+
+

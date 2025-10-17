@@ -1,3 +1,4 @@
+﻿
 from __future__ import annotations
 
 from django.conf import settings
@@ -55,12 +56,15 @@ class PasswordResetRequestView(APIView):
             reset_url = f"{settings.FRONTEND_PASSWORD_RESET_URL}?uid={uid}&token={token}"
             subject = "Password reset request"
             message = (
-                "Вы запросили смену пароля.\n\n"
-                f"Перейдите по ссылке, чтобы задать новый пароль:\n{reset_url}\n\n"
-                "Если вы не отправляли этот запрос, проигнорируйте письмо."
+                "You requested a password reset.\n\n"
+                f"Follow the link to set a new password:\n{reset_url}\n\n"
+                "If you did not send this request, simply ignore this email."
             )
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
-        return response.Response({"detail": "Если email зарегистрирован, мы отправили инструкцию по восстановлению."}, status=status.HTTP_202_ACCEPTED)
+        return response.Response(
+            {"detail": "If the email is registered, we have sent reset instructions."},
+            status=status.HTTP_202_ACCEPTED,
+        )
 
 
 class PasswordResetConfirmView(APIView):
@@ -77,12 +81,13 @@ class PasswordResetConfirmView(APIView):
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid, is_active=True)
         except (User.DoesNotExist, ValueError, TypeError, OverflowError):
-            return response.Response({"detail": "Ссылка недействительна."}, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response({"detail": "Reset link is invalid."}, status=status.HTTP_400_BAD_REQUEST)
 
         token_generator = PasswordResetTokenGenerator()
         if not token_generator.check_token(user, token):
-            return response.Response({"detail": "Ссылка недействительна или устарела."}, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response({"detail": "Reset link is invalid or has expired."}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(password)
         user.save(update_fields=["password"])
-        return response.Response({"detail": "Пароль успешно изменен."}, status=status.HTTP_200_OK)
+        return response.Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
+

@@ -1,3 +1,4 @@
+﻿
 "use client";
 
 import Link from "next/link";
@@ -15,9 +16,9 @@ export default function ForgotPasswordPage() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") || "");
+    const email = String(formData.get("email") || "").trim();
     if (!email) {
-      setError("Введите email.");
+      setError("Email is required.");
       return;
     }
 
@@ -30,11 +31,11 @@ export default function ForgotPasswordPage() {
           body: JSON.stringify({ email }),
         });
         if (!response.ok) {
-          throw new Error("Не удалось отправить письмо. Попробуйте позже.");
+          throw new Error("Failed to send reset email. Please try again later.");
         }
         setSubmitted(true);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Не удалось отправить письмо.");
+        setError(err instanceof Error ? err.message : "Failed to send reset email.");
       }
     });
   };
@@ -43,13 +44,13 @@ export default function ForgotPasswordPage() {
     return (
       <section className="section">
         <div className="container auth-card">
-          <h1>Проверьте почту</h1>
+          <h1>Check your inbox</h1>
           <p className="auth-subtitle">
-            Если адрес зарегистрирован, мы отправили инструкцию по восстановлению пароля. Проверьте входящие или папку
-            «Спам».
+            If the address is registered, we have sent instructions for resetting your password. Please check spam if you
+            cannot find the message.
           </p>
           <button className="btn btn-primary auth-submit" onClick={() => router.push("/signin")}>
-            Вернуться ко входу
+            Back to sign in
           </button>
         </div>
       </section>
@@ -59,10 +60,8 @@ export default function ForgotPasswordPage() {
   return (
     <section className="section">
       <div className="container auth-card">
-        <h1>Забыли пароль?</h1>
-        <p className="auth-subtitle">
-          Укажите email, который вы использовали при регистрации. Мы отправим ссылку для восстановления пароля.
-        </p>
+        <h1>Forgot password?</h1>
+        <p className="auth-subtitle">Enter the email you used during registration. We will send a recovery link.</p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
             <span>Email</span>
@@ -70,13 +69,14 @@ export default function ForgotPasswordPage() {
           </label>
           {error && <p className="auth-error">{error}</p>}
           <button className="btn btn-primary auth-submit" type="submit" disabled={isPending}>
-            {isPending ? "Отправляем..." : "Отправить ссылку"}
+            {isPending ? "Sending..." : "Send recovery link"}
           </button>
         </form>
         <p className="auth-hint">
-          <Link href="/signin">Вернуться ко входу</Link>
+          <Link href="/signin">Back to sign in</Link>
         </p>
       </div>
     </section>
   );
 }
+

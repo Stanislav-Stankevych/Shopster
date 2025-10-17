@@ -1,0 +1,148 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { Product } from "@/types/product";
+import { ProductCard } from "@/components/ProductCard";
+
+type ProductsInfiniteListProps = {
+  initialItems: Product[];
+  initialNextPage: number | null;
+  pageSize: number;
+  totalCount: number;
+};
+
+const DEFAULT_ERROR_MESSAGE = "Could not load products. Please try again.";
+
+function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL;
+  }
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return "http://localhost:8000";
+}
+
+function extractNextPage(raw: unknown, baseUrl: string): number | null {
+  if (!raw || typeof raw !== "string") {
+    return null;
+  }
+  try {
+    const searchParams = new URL(raw, baseUrl).searchParams;
+    const value = searchParams.get("page");
+    return value ? Number(value) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function ProductsInfiniteList({
+  initialItems,
+  initialNextPage,
+  pageSize,
+  totalCount,
+}: ProductsInfiniteListProps) {
+  const [items, setItems] = useState<Product[]>(() => initialItems);
+  const [nextPage, setNextPage] = useState<number | null>(initialNextPage);
+  const [count, setCount] = useState<number>(totalCount);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const apiBaseUrl = useMemo(getApiBaseUrl, []);
+
+  const hasMore = useMemo(() => nextPage !== null, [nextPage]);
+
+  const loadMore = useCallback(async () => {
+    if (nextPage === null || isLoading) {
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const url = new URL("/api/products/", apiBaseUrl);
+      url.searchParams.set("page", String(nextPage));
+      url.searchParams.set("page_size", String(pageSize));
+
+      const response = await fetch(url.toString(), {
+        headers: { Accept: "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error(DEFAULT_ERROR_MESSAGE);
+      }
+
+      const data = await response.json();
+      const newItems: Product[] = Array.isArray(data.results) ? data.results : data;
+
+      setItems((prev) => [...prev, ...newItems]);
+      setNextPage(extractNextPage(data.next, apiBaseUrl));
+      if (typeof data.count === "number") {
+        setCount(data.count);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : DEFAULT_ERROR_MESSAGE);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiBaseUrl, nextPage, pageSize, isLoading]);
+
+  useEffect(() => {
+    if (!hasMore || error) {
+      return;
+    }
+    const target = sentinelRef.current;
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            loadMore().catch(() => {
+              /* error handled in state */
+            });
+          }
+        });
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [error, hasMore, loadMore]);
+
+  return (
+    <>
+      <div className="product-grid">
+        {items.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+
+      <div className="catalog-footer" ref={sentinelRef} />
+
+      <div className="catalog-status">
+        <p>
+          Showing {items.length} of {count}
+        </p>
+        {error && <p className="catalog-error">{error}</p>}
+        {hasMore && (
+          <button
+            className="btn btn-secondary"
+            type="button"
+            onClick={() => loadMore().catch(() => undefined)}
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Load more"}
+          </button>
+        )}
+        {!hasMore && <p>You reached the end of the catalog.</p>}
+      </div>
+    </>
+  );
+}

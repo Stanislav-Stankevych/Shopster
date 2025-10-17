@@ -25,7 +25,7 @@ export default async function ProductDetailPage({ params }: Props) {
       <div className="container hero-grid">
         <div className="hero-card">
           <Link href="/products" className="btn btn-outline" style={{ marginBottom: "1.5rem", width: "fit-content" }}>
-            ← Back to catalog
+            Back to catalog
           </Link>
           <h1>{product.name}</h1>
           <p className="lead">{product.description || product.short_description}</p>
@@ -54,4 +54,7 @@ export default async function ProductDetailPage({ params }: Props) {
     </section>
   );
 }
+
+
+
 

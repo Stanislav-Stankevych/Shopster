@@ -1,5 +1,5 @@
 
-# Shopster – Django + Next.js commerce stack
+# Shopster â€“ Django + Next.js commerce stack
 
 Modular e-commerce platform built with Django REST Framework, PostgreSQL, Redis, Algolia search and a Next.js 15 storefront.
 
@@ -19,10 +19,10 @@ docker compose up --build
 
 docker compose exec web python backend/manage.py createsuperuser
 # optional demo catalogue
-docker compose exec web python backend/manage.py load_demo_data --reset
+docker compose exec web python backend/manage.py load_demo_data --reset --products 120
 ```
 - Admin panel: <http://localhost:8000/admin/>
-- API root (products, categories, carts, orders…): <http://localhost:8000/api/>
+- API root (products, categories, carts, ordersâ€¦): <http://localhost:8000/api/>
 - Auth endpoints:
   - `POST /api/auth/register/`
   - `POST /api/auth/login/` (username or email + password, returns JWT pair)
@@ -31,12 +31,12 @@ docker compose exec web python backend/manage.py load_demo_data --reset
   - `POST /api/auth/password/reset/`
   - `POST /api/auth/password/reset/confirm/`
 - Cart endpoints:
-  - `POST /api/carts/` — create anonymous cart
-  - `GET /api/carts/<uuid>/` — fetch cart with items
-  - `POST /api/carts/<uuid>/items/` — add product (or increase quantity)
-  - `PATCH /api/carts/<uuid>/items/<id>/`, `DELETE ...` — update/remove line items
+  - `POST /api/carts/` â€” create anonymous cart
+  - `GET /api/carts/<uuid>/` â€” fetch cart with items
+  - `POST /api/carts/<uuid>/items/` â€” add product (or increase quantity)
+  - `PATCH /api/carts/<uuid>/items/<id>/`, `DELETE ...` â€” update/remove line items
 - Orders:
-  - `POST /api/orders/` — checkout (triggers confirmation email)
+  - `POST /api/orders/` â€” checkout (triggers confirmation email)
 
 ### Environment highlights
 ```
@@ -73,7 +73,7 @@ npm run dev
 Forgot/reset flow: `/forgot-password`, `/reset-password?uid=<uid>&token=<token>`.
 
 ## Configuration reference
-- `frontend/src/lib/config.ts` – shared base URL for the Django API.
+- `frontend/src/lib/config.ts` â€“ shared base URL for the Django API.
 - `frontend/src/lib/authOptions.ts` - NextAuth setup, token refresh logic.
 - `frontend/src/lib/cartStore.ts` - Zustand store for cart and checkout state.
 - `frontend/src/app/api/auth/[...nextauth]/route.ts` - NextAuth handler.
@@ -87,7 +87,7 @@ docker compose exec web python backend/manage.py migrate
 docker compose exec web python backend/manage.py collectstatic --noinput
 
 # demo catalogue
-docker compose exec web python backend/manage.py load_demo_data --reset
+docker compose exec web python backend/manage.py load_demo_data --reset --products 120
 
 # Algolia reindex
 docker compose exec web python backend/manage.py sync_algolia_products

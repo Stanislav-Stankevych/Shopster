@@ -60,6 +60,7 @@ type CartState = {
   totalItems: number;
   isLoading: boolean;
   error: string | null;
+  resetCartState: () => void;
   ensureCart: () => Promise<string>;
   loadCart: () => Promise<void>;
   addItem: (productId: number, quantity?: number) => Promise<void>;
@@ -108,6 +109,17 @@ export const useCartStore = create<CartState>()(
       totalItems: 0,
       isLoading: false,
       error: null,
+      // helper to reset all cart-related data when backend cart disappears
+      resetCartState: () => {
+        set({
+          cartId: null,
+          items: [],
+          subtotal: 0,
+          totalItems: 0,
+          isLoading: false,
+          error: null,
+        });
+      },
 
       ensureCart: async () => {
         const { cartId } = get();
@@ -127,7 +139,7 @@ export const useCartStore = create<CartState>()(
       },
 
       loadCart: async () => {
-        const { cartId } = get();
+        const { cartId, resetCartState } = get();
         if (!cartId) {
           return;
         }
@@ -135,6 +147,11 @@ export const useCartStore = create<CartState>()(
         try {
           const response = await fetch(`${API_BASE_URL}/api/carts/${cartId}/`);
           if (!response.ok) {
+            if (response.status === 404) {
+              resetCartState();
+              set({ error: "Cart session was refreshed. Please try again." });
+              return;
+            }
             throw new Error("Failed to load cart.");
           }
           const data = (await response.json()) as CartApiResponse;
@@ -148,17 +165,29 @@ export const useCartStore = create<CartState>()(
       },
 
       addItem: async (productId: number, quantity = 1) => {
-        const cartId = await get().ensureCart();
+        const { resetCartState } = get();
+        const ensureAndPost = async (id: string): Promise<Response> => {
+          return fetch(`${API_BASE_URL}/api/carts/${id}/items/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ product_id: productId, quantity }),
+          });
+        };
+
+        let cartId = await get().ensureCart();
         const existing = get().items.find((item) => item.product.id === productId);
         try {
           if (existing) {
             return get().updateItem(existing.id, existing.quantity + quantity);
           }
-          const response = await fetch(`${API_BASE_URL}/api/carts/${cartId}/items/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ product_id: productId, quantity }),
-          });
+          let response = await ensureAndPost(cartId);
+          if (response.status === 404) {
+            // cart does not exist anymore, reset state and retry once
+            resetCartState();
+            set({ error: "Cart session was refreshed. Please try again." });
+            cartId = await get().ensureCart();
+            response = await ensureAndPost(cartId);
+          }
           if (!response.ok) {
             const data = await response.json().catch(() => ({}));
             const message =
@@ -175,7 +204,7 @@ export const useCartStore = create<CartState>()(
       },
 
       updateItem: async (itemId: number, quantity: number) => {
-        const { cartId } = get();
+        const { cartId, resetCartState } = get();
         if (!cartId) {
           return;
         }
@@ -187,6 +216,10 @@ export const useCartStore = create<CartState>()(
             body: JSON.stringify({ quantity: safeQty }),
           });
           if (!response.ok) {
+            if (response.status === 404) {
+              resetCartState();
+              set({ error: "Cart session was refreshed. Please try again." });
+            }
             throw new Error("Failed to update cart.");
           }
           await get().loadCart();
@@ -197,7 +230,7 @@ export const useCartStore = create<CartState>()(
       },
 
       removeItem: async (itemId: number) => {
-        const { cartId, loadCart } = get();
+        const { cartId, loadCart, resetCartState } = get();
         if (!cartId) {
           return;
         }
@@ -206,6 +239,10 @@ export const useCartStore = create<CartState>()(
             method: "DELETE",
           });
           if (!response.ok) {
+            if (response.status === 404) {
+              resetCartState();
+              set({ error: "Cart session was refreshed. Please try again." });
+            }
             throw new Error("Failed to remove product from cart.");
           }
           await loadCart();
@@ -218,7 +255,8 @@ export const useCartStore = create<CartState>()(
       },
 
       clearCart: () => {
-        set({ cartId: null, items: [], subtotal: 0, totalItems: 0, error: null });
+        const { resetCartState } = get();
+        resetCartState();
       },
 
       checkout: async (payload: CheckoutPayload) => {

@@ -1,4 +1,5 @@
 import "server-only";
+
 import { Product } from "@/types/product";
 
 const API_BASE =
@@ -6,26 +7,64 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://localhost:8000";
 
-export async function fetchProducts(limit = 6): Promise<Product[]> {
-  const url = new URL("/api/products/", API_BASE);
-  if (limit) {
-    url.searchParams.set("page_size", String(limit));
+type FetchProductsPageOptions = {
+  page?: number;
+  pageSize?: number;
+};
+
+export type PaginatedProducts = {
+  items: Product[];
+  nextPage: number | null;
+  previousPage: number | null;
+  totalCount: number;
+};
+
+function parsePageNumber(value: unknown): number | null {
+  if (!value || typeof value !== "string") {
+    return null;
   }
+  try {
+    const pageParam = new URL(value, API_BASE).searchParams.get("page");
+    return pageParam ? Number(pageParam) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchProductsPage(
+  options: FetchProductsPageOptions = {}
+): Promise<PaginatedProducts> {
+  const page = options.page ?? 1;
+  const pageSize = options.pageSize ?? 12;
+
+  const url = new URL("/api/products/", API_BASE);
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("page_size", String(pageSize));
 
   const response = await fetch(url.toString(), {
-    headers: {
-      Accept: "application/json"
-    },
+    headers: { Accept: "application/json" },
     next: { revalidate: 60 }
   });
 
   if (!response.ok) {
-    console.error("Failed to fetch products", response.statusText);
-    return [];
+    console.error("Failed to fetch products page", response.status, response.statusText);
+    return { items: [], nextPage: null, previousPage: null, totalCount: 0 };
   }
 
   const data = await response.json();
-  return data.results ?? data;
+  const items: Product[] = Array.isArray(data.results) ? data.results : data;
+
+  return {
+    items,
+    nextPage: parsePageNumber(data.next),
+    previousPage: parsePageNumber(data.previous),
+    totalCount: typeof data.count === "number" ? data.count : items.length
+  };
+}
+
+export async function fetchProducts(limit = 6): Promise<Product[]> {
+  const page = await fetchProductsPage({ pageSize: limit });
+  return page.items;
 }
 
 export async function fetchProduct(slug: string): Promise<Product | null> {
@@ -34,8 +73,10 @@ export async function fetchProduct(slug: string): Promise<Product | null> {
     headers: { Accept: "application/json" },
     next: { revalidate: 60 }
   });
+
   if (!response.ok) {
     return null;
   }
+
   return response.json();
 }

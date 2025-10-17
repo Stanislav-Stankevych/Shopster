@@ -127,6 +127,46 @@ PRODUCTS: list[ProductSeed] = [
 ]
 
 
+def clamp_color(value: int) -> int:
+    return max(0, min(255, value))
+
+
+def build_product_seeds(target_count: int) -> list[ProductSeed]:
+    """Expand the base seed list so that demo data can include many products."""
+    base_seeds = PRODUCTS[:]
+    if target_count <= len(base_seeds):
+        return base_seeds[:target_count]
+
+    extras: list[ProductSeed] = []
+    extra_required = target_count - len(base_seeds)
+
+    for index in range(extra_required):
+        base = PRODUCTS[index % len(PRODUCTS)]
+        variant_number = index + 1
+        price_delta = Decimal(random.randint(-1500, 2000))
+        price = max(Decimal("990"), base.price + price_delta)
+        stock = random.randint(10, 200)
+        color = tuple(
+            clamp_color(component + random.randint(-30, 30)) for component in base.color
+        )
+
+        extras.append(
+            ProductSeed(
+                name=f"{base.name} Variant {variant_number}",
+                category=base.category,
+                price=price,
+                currency=base.currency,
+                description=f"{base.description}\n\nВариация №{variant_number} с уникальными характеристиками.",
+                short_description=f"{base.short_description} · Вариация {variant_number}",
+                stock=stock,
+                sku=f"{base.sku}-VAR{variant_number:03d}",
+                color=color,
+            )
+        )
+
+    return base_seeds + extras
+
+
 def generate_image_bytes(product_name: str, color: tuple[int, int, int]) -> ContentFile:
     """Create a simple placeholder image containing product name."""
     width, height = 960, 640
@@ -157,7 +197,13 @@ class Command(BaseCommand):
         parser.add_argument(
             "--reset",
             action="store_true",
-            help="Удалить существующие данные магазина перед загрузкой демо.",
+            help="Удалить существующие демо-данные перед перезаписью.",
+        )
+        parser.add_argument(
+            "--products",
+            type=int,
+            default=len(PRODUCTS),
+            help="Сколько товаров сгенерировать (по умолчанию базовый набор).",
         )
 
     @transaction.atomic
@@ -172,8 +218,10 @@ class Command(BaseCommand):
             Product.objects.all().delete()
             Category.objects.all().delete()
 
+        target_products = max(options.get("products") or len(PRODUCTS), 1)
         created_categories = self._create_categories()
-        created_products = self._create_products(created_categories)
+        seeds = build_product_seeds(target_products)
+        created_products = self._create_products(created_categories, seeds)
 
         self.stdout.write(self.style.SUCCESS(f"Готово! Категорий: {len(created_categories)}, товаров: {len(created_products)}"))
         self.stdout.write("Теперь можно открыть главную страницу http://localhost:8000/ и увидеть витрину.")
@@ -188,9 +236,9 @@ class Command(BaseCommand):
             categories[name] = category
         return categories
 
-    def _create_products(self, categories: dict[str, Category]) -> list[Product]:
+    def _create_products(self, categories: dict[str, Category], seeds: list[ProductSeed]) -> list[Product]:
         created_products: list[Product] = []
-        for seed in PRODUCTS:
+        for seed in seeds:
             category = categories[seed.category]
             product, _ = Product.objects.update_or_create(
                 sku=seed.sku,

@@ -9,6 +9,60 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 
+class SoftDeleteQuerySet(models.QuerySet):
+    def delete(self):
+        return super().update(deleted_at=timezone.now())
+
+    def hard_delete(self):
+        return super().delete()
+
+    def alive(self):
+        return self.filter(deleted_at__isnull=True)
+
+    def dead(self):
+        return self.filter(deleted_at__isnull=False)
+
+
+class SoftDeleteManager(models.Manager):
+    def get_queryset(self):
+        return SoftDeleteQuerySet(self.model, using=self._db).alive()
+
+    def all_with_deleted(self):
+        return SoftDeleteQuerySet(self.model, using=self._db)
+
+    def deleted_only(self):
+        return self.all_with_deleted().dead()
+
+
+class SoftDeleteAllManager(SoftDeleteManager):
+    def get_queryset(self):
+        return SoftDeleteQuerySet(self.model, using=self._db)
+
+
+class SoftDeleteModel(models.Model):
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = SoftDeleteManager()
+    all_objects = SoftDeleteAllManager()
+
+    class Meta:
+        abstract = True
+
+    def delete(self, using=None, keep_parents=False):
+        if self.deleted_at:
+            return
+        self.deleted_at = timezone.now()
+        self.save(update_fields=["deleted_at"])
+
+    def hard_delete(self, using=None, keep_parents=False):
+        super().delete(using=using, keep_parents=keep_parents)
+
+    def restore(self):
+        if self.deleted_at:
+            self.deleted_at = None
+            self.save(update_fields=["deleted_at"])
+
+
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(max_length=255, unique=True, blank=True, allow_unicode=True)
@@ -32,7 +86,7 @@ class Category(models.Model):
         return self.name
 
 
-class Product(models.Model):
+class Product(SoftDeleteModel):
     category = models.ForeignKey(
         Category,
         related_name="products",
@@ -145,7 +199,7 @@ class CartItem(models.Model):
         return self.product.price * self.quantity
 
 
-class Order(models.Model):
+class Order(SoftDeleteModel):
     class Status(models.TextChoices):
         DRAFT = "draft", "Черновик"
         PENDING = "pending", "В ожидании"

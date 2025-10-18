@@ -5,6 +5,7 @@ import "@/app/globals.css";
 import { AccountMenu } from "@/components/AccountMenu";
 import { AlgoliaSearch } from "@/components/AlgoliaSearch";
 import { CartBadge } from "@/components/CartBadge";
+import { AdminNavLink } from "@/components/AdminNavLink";
 import { AuthSessionProvider } from "@/components/SessionProvider";
 import { Inter } from "next/font/google";
 import Link from "next/link";
@@ -27,9 +28,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
                 <nav className="nav-links">
                   <Link href="/#features">Features</Link>
                   <Link href="/products">Catalog</Link>
-                  <a href="http://localhost:8000/admin/" target="_blank" rel="noreferrer noopener">
-                    Admin
-                  </a>
+                  <AdminNavLink />
                 </nav>
                 <CartBadge />
                 <AccountMenu />

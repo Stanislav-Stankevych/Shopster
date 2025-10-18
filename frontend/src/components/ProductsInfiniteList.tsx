@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -10,6 +10,7 @@ type ProductsInfiniteListProps = {
   initialNextPage: number | null;
   pageSize: number;
   totalCount: number;
+  query?: Record<string, string | undefined>;
 };
 
 const DEFAULT_ERROR_MESSAGE = "Could not load products. Please try again.";
@@ -42,18 +43,30 @@ export function ProductsInfiniteList({
   initialNextPage,
   pageSize,
   totalCount,
+  query = {},
 }: ProductsInfiniteListProps) {
   const [items, setItems] = useState<Product[]>(() => initialItems);
   const [nextPage, setNextPage] = useState<number | null>(initialNextPage);
   const [count, setCount] = useState<number>(totalCount);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryRef = useRef<Record<string, string | undefined>>(query);
+
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const apiBaseUrl = useMemo(getApiBaseUrl, []);
 
   const hasMore = useMemo(() => nextPage !== null, [nextPage]);
 
+  useEffect(() => {
+    queryRef.current = query;
+    setItems(initialItems);
+    setNextPage(initialNextPage);
+    setCount(totalCount);
+    setError(null);
+  }, [initialItems, initialNextPage, totalCount, query]);
+
   const loadMore = useCallback(async () => {
+    const filters = queryRef.current;
     if (nextPage === null || isLoading) {
       return;
     }
@@ -63,6 +76,13 @@ export function ProductsInfiniteList({
       const url = new URL("/api/products/", apiBaseUrl);
       url.searchParams.set("page", String(nextPage));
       url.searchParams.set("page_size", String(pageSize));
+      if (filters) {
+        for (const [key, value] of Object.entries(filters)) {
+          if (value !== undefined && value !== "") {
+            url.searchParams.set(key, value);
+          }
+        }
+      }
 
       const response = await fetch(url.toString(), {
         headers: { Accept: "application/json" },
@@ -146,3 +166,7 @@ export function ProductsInfiniteList({
     </>
   );
 }
+
+
+
+

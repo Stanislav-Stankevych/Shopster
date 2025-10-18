@@ -11,6 +11,8 @@ type BackendUser = {
   email: string;
   first_name: string;
   last_name: string;
+  is_staff: boolean;
+  is_superuser: boolean;
   profile?: {
     phone?: string;
     avatar?: string | null;
@@ -136,6 +138,8 @@ export const authOptions: NextAuthOptions = {
             email: (user as any).email,
             first_name: (user as any).first_name,
             last_name: (user as any).last_name,
+            is_staff: (user as any).is_staff,
+            is_superuser: (user as any).is_superuser,
             profile: (user as any).profile,
           },
           accessToken: (user as any).accessToken,

@@ -1,4 +1,4 @@
-export type Product = {
+﻿export type Product = {
   id: number;
   name: string;
   slug: string;
@@ -22,3 +22,10 @@ export type Product = {
     is_main: boolean;
   }>;
 };
+
+export type CategorySummary = {
+  id: number;
+  name: string;
+  slug: string;
+};
+

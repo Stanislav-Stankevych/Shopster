@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 import logging
@@ -7,11 +9,15 @@ import logging
 from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django.utils.timezone import make_aware
+from django.db.models import Count, Sum
 from rest_framework import mixins, status, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .models import Cart, CartItem, Category, Order, Product
+from .filters import ProductFilter
+from .models import Cart, CartItem, Category, Order, OrderItem, Product
 from .permissions import IsAdminOrReadOnly
 from .serializers import (
     CartItemSerializer,
@@ -37,6 +43,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly]
     lookup_field = "slug"
+    filterset_class = ProductFilter
+    ordering_fields = ("price", "created_at", "name")
+    ordering = ("name",)
 
 
 class CartViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
@@ -147,5 +156,73 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
         except Exception as exc:  # pragma: no cover
             logger.warning("Failed to send order confirmation email: %s", exc)
+
+
+class StatisticsOverviewView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        date_from = request.query_params.get("date_from")
+        date_to = request.query_params.get("date_to")
+
+        order_queryset = Order.objects.all()
+        if date_from:
+            try:
+                start = datetime.fromisoformat(date_from)
+                if start.tzinfo is None:
+                    start = make_aware(start)
+                order_queryset = order_queryset.filter(placed_at__gte=start)
+            except ValueError:
+                return Response({"detail": "Invalid date_from format. Use ISO 8601."}, status=status.HTTP_400_BAD_REQUEST)
+        if date_to:
+            try:
+                end = datetime.fromisoformat(date_to)
+                if end.tzinfo is None:
+                    end = make_aware(end)
+                order_queryset = order_queryset.filter(placed_at__lte=end)
+            except ValueError:
+                return Response({"detail": "Invalid date_to format. Use ISO 8601."}, status=status.HTTP_400_BAD_REQUEST)
+
+        totals_by_currency_raw = order_queryset.values("currency").annotate(
+            total_sales=Sum("total_amount"),
+            total_orders=Count("id"),
+        )
+        totals_by_currency = [
+            {
+                "currency": item["currency"],
+                "total_sales": str(item["total_sales"] or Decimal("0.00")),
+                "total_orders": item["total_orders"],
+            }
+            for item in totals_by_currency_raw
+        ]
+        total_orders = sum(item["total_orders"] for item in totals_by_currency)
+        gross_revenue = sum(Decimal(item["total_sales"]) for item in totals_by_currency)
+
+        top_products_queryset = (
+            OrderItem.objects.filter(order__in=order_queryset)
+            .values("product_id", "product_name")
+            .annotate(
+                total_quantity=Sum("quantity"),
+                total_sales=Sum("line_total"),
+            )
+            .order_by("-total_quantity")[:5]
+        )
+        top_products = [
+            {
+                "product_id": item["product_id"],
+                "product_name": item["product_name"],
+                "total_quantity": item["total_quantity"],
+                "total_sales": str(item["total_sales"] or Decimal("0.00")),
+            }
+            for item in top_products_queryset
+        ]
+
+        response_payload = {
+            "total_orders": total_orders,
+            "gross_revenue": str(gross_revenue),
+            "currency_breakdown": totals_by_currency,
+            "top_products": top_products,
+        }
+        return Response(response_payload)
 
 

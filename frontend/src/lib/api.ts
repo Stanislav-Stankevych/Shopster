@@ -1,6 +1,6 @@
-import "server-only";
+﻿import "server-only";
 
-import { Product } from "@/types/product";
+import { Product, CategorySummary } from "@/types/product";
 
 const API_BASE =
   process.env.INTERNAL_API_BASE_URL ??
@@ -10,6 +10,7 @@ const API_BASE =
 type FetchProductsPageOptions = {
   page?: number;
   pageSize?: number;
+  query?: Record<string, string | undefined>;
 };
 
 export type PaginatedProducts = {
@@ -31,15 +32,20 @@ function parsePageNumber(value: unknown): number | null {
   }
 }
 
-export async function fetchProductsPage(
-  options: FetchProductsPageOptions = {}
-): Promise<PaginatedProducts> {
+export async function fetchProductsPage(options: FetchProductsPageOptions = {}): Promise<PaginatedProducts> {
   const page = options.page ?? 1;
   const pageSize = options.pageSize ?? 12;
 
   const url = new URL("/api/products/", API_BASE);
   url.searchParams.set("page", String(page));
   url.searchParams.set("page_size", String(pageSize));
+  if (options.query) {
+    for (const [key, value] of Object.entries(options.query)) {
+      if (value !== undefined && value !== "") {
+        url.searchParams.set(key, value);
+      }
+    }
+  }
 
   const response = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
@@ -80,3 +86,25 @@ export async function fetchProduct(slug: string): Promise<Product | null> {
 
   return response.json();
 }
+
+export async function fetchCategories(): Promise<CategorySummary[]> {
+  const url = new URL("/api/categories/", API_BASE);
+  url.searchParams.set("page_size", "100");
+
+  const response = await fetch(url.toString(), {
+    headers: { Accept: "application/json" },
+    next: { revalidate: 300 }
+  });
+
+  if (!response.ok) {
+    console.error("Failed to fetch categories", response.status, response.statusText);
+    return [];
+  }
+
+  const data = await response.json();
+  const categories: CategorySummary[] = Array.isArray(data.results) ? data.results : data;
+  return categories.filter((category) => Boolean(category?.slug));
+}
+
+
+

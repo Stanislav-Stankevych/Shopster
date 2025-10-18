@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from decimal import Decimal
 from uuid import uuid4
@@ -67,6 +67,8 @@ class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(max_length=255, unique=True, blank=True, allow_unicode=True)
     description = models.TextField(blank=True)
+    meta_title = models.CharField(max_length=255, blank=True)
+    meta_description = models.CharField(max_length=500, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -80,12 +82,14 @@ class Category(models.Model):
         if not self.slug:
             raw_slug = slugify(self.name, allow_unicode=True)
             self.slug = raw_slug or f"category-{uuid4().hex[:8]}"
+        if not self.meta_title:
+            self.meta_title = self.name
+        if not self.meta_description and self.description:
+            self.meta_description = self.description[:500]
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return self.name
-
-
 class Product(SoftDeleteModel):
     category = models.ForeignKey(
         Category,
@@ -97,6 +101,9 @@ class Product(SoftDeleteModel):
     sku = models.CharField(max_length=64, unique=True)
     short_description = models.CharField(max_length=500, blank=True)
     description = models.TextField(blank=True)
+    meta_title = models.CharField(max_length=255, blank=True)
+    meta_description = models.CharField(max_length=500, blank=True)
+    meta_keywords = models.CharField(max_length=255, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default="RUB")
     stock = models.PositiveIntegerField(default=0)
@@ -118,12 +125,15 @@ class Product(SoftDeleteModel):
                 counter += 1
                 slug = f"{base_slug}-{counter}"
             self.slug = slug
+        if not self.meta_title:
+            self.meta_title = self.name
+        if not self.meta_description:
+            candidates = [self.short_description, self.description]
+            self.meta_description = next((c[:500] for c in candidates if c), "")
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return self.name
-
-
 class ProductImage(models.Model):
     product = models.ForeignKey(
         Product,
@@ -328,3 +338,5 @@ class OrderItem(models.Model):
 
     def __str__(self) -> str:
         return f"{self.product_name} x {self.quantity}"
+
+

@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Configure, InstantSearch, SearchBox, useHits, useSearchBox } from "react-instantsearch-hooks-web";
+import { Configure, InstantSearch, SearchBox, useHits, useSearchBox, useInstantSearch } from "react-instantsearch-hooks-web";
 import type { Hit } from "instantsearch.js";
 
 import { ALGOLIA_INDEX, getAlgoliaSearchClient } from "@/lib/algolia";
@@ -59,6 +59,8 @@ function SearchDropdown() {
   const { query } = useSearchBox();
   const trimmedQuery = (query || "").trim();
   const { hits } = useHits<SearchHit>();
+  const { results } = useInstantSearch();
+  const totalHits = results?.nbHits ?? hits.length;
 
   if (trimmedQuery.length < MIN_QUERY_LENGTH || !hits.length) {
     return null;
@@ -90,6 +92,11 @@ function SearchDropdown() {
           </li>
         );
       })}
+      <li className="header-search__footer">
+        <Link href={`/products?search=${encodeURIComponent(trimmedQuery)}`}>
+          Show all results ({totalHits})
+        </Link>
+      </li>
     </ul>
   );
 }

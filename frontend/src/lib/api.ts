@@ -1,20 +1,21 @@
 ﻿import "server-only";
 
 import { Product, CategorySummary } from "@/types/product";
+import { PostSummary, PostDetail } from "@/types/post";
 
 const API_BASE =
   process.env.INTERNAL_API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://localhost:8000";
 
-type FetchProductsPageOptions = {
+type PaginationParams = {
   page?: number;
   pageSize?: number;
   query?: Record<string, string | undefined>;
 };
 
-export type PaginatedProducts = {
-  items: Product[];
+export type PaginatedResult<T> = {
+  items: T[];
   nextPage: number | null;
   previousPage: number | null;
   totalCount: number;
@@ -32,40 +33,51 @@ function parsePageNumber(value: unknown): number | null {
   }
 }
 
-export async function fetchProductsPage(options: FetchProductsPageOptions = {}): Promise<PaginatedProducts> {
-  const page = options.page ?? 1;
-  const pageSize = options.pageSize ?? 12;
-
-  const url = new URL("/api/products/", API_BASE);
+async function fetchPaginatedCollection<T>(endpoint: string, params: PaginationParams = {}): Promise<PaginatedResult<T>> {
+  const page = params.page ?? 1;
+  const pageSize = params.pageSize ?? 12;
+  const url = new URL(endpoint, API_BASE);
   url.searchParams.set("page", String(page));
   url.searchParams.set("page_size", String(pageSize));
-  if (options.query) {
-    for (const [key, value] of Object.entries(options.query)) {
+
+  if (params.query) {
+    for (const [key, value] of Object.entries(params.query)) {
       if (value !== undefined && value !== "") {
         url.searchParams.set(key, value);
       }
     }
   }
 
+  const shouldBypassCache = params.query && Object.values(params.query).some((value) => value !== undefined && value !== "");
   const response = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
-    next: { revalidate: 60 }
+    ...(shouldBypassCache ? { cache: "no-store" as const } : { next: { revalidate: 60 } })
   });
 
   if (!response.ok) {
-    console.error("Failed to fetch products page", response.status, response.statusText);
-    return { items: [], nextPage: null, previousPage: null, totalCount: 0 };
+    throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
   }
 
   const data = await response.json();
-  const items: Product[] = Array.isArray(data.results) ? data.results : data;
+  const items: T[] = Array.isArray(data.results) ? data.results : data;
 
   return {
     items,
     nextPage: parsePageNumber(data.next),
     previousPage: parsePageNumber(data.previous),
-    totalCount: typeof data.count === "number" ? data.count : items.length
+    totalCount: typeof data.count === "number" ? data.count : items.length,
   };
+}
+
+type FetchProductsPageOptions = PaginationParams;
+
+export async function fetchProductsPage(options: FetchProductsPageOptions = {}): Promise<PaginatedResult<Product>> {
+  try {
+    return await fetchPaginatedCollection<Product>("/api/products/", options);
+  } catch (error) {
+    console.error("Failed to fetch products page", error);
+    return { items: [], nextPage: null, previousPage: null, totalCount: 0 };
+  }
 }
 
 export async function fetchProducts(limit = 6): Promise<Product[]> {
@@ -77,7 +89,7 @@ export async function fetchProduct(slug: string): Promise<Product | null> {
   const url = new URL(`/api/products/${slug}/`, API_BASE);
   const response = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
-    next: { revalidate: 60 }
+    cache: "no-store",
   });
 
   if (!response.ok) {
@@ -102,9 +114,35 @@ export async function fetchCategories(): Promise<CategorySummary[]> {
   }
 
   const data = await response.json();
-  const categories: CategorySummary[] = Array.isArray(data.results) ? data.results : data;
-  return categories.filter((category) => Boolean(category?.slug));
+  const payload = Array.isArray(data.results) ? data.results : data;
+  return payload
+    .filter((category: any) => category && category.slug && category.is_active !== false)
+    .map((category: any) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      meta_title: category.meta_title ?? category.name,
+      meta_description: category.meta_description ?? category.description ?? "",
+    }));
 }
 
+export async function fetchPosts(options: PaginationParams = {}): Promise<PaginatedResult<PostSummary>> {
+  return fetchPaginatedCollection<PostSummary>("/api/content/posts/", options);
+}
+
+export async function fetchPost(slug: string): Promise<PostDetail | null> {
+  const url = new URL(`/api/content/posts/${slug}/`, API_BASE);
+  const response = await fetch(url.toString(), {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json();
+}
 
 

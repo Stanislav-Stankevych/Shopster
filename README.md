@@ -1,105 +1,169 @@
+﻿# Shopster · Full-stack Commerce Platform
 
-# Shopster – Django + Next.js commerce stack
+Shopster is a production-ready ecommerce starter that pairs **Django REST Framework** + **PostgreSQL + Redis** on the backend with a **Next.js 15 / TypeScript** storefront. The stack ships with JWT authentication, Algolia search, soft-delete aware catalog management, an admin-friendly content/blog module, and SEO tooling (metadata helpers, sitemap, OpenGraph defaults).
 
-Modular e-commerce platform built with Django REST Framework, PostgreSQL, Redis, Algolia search and a Next.js 15 storefront.
+## Architecture Snapshot
 
-## What's inside
-- **Backend:** Django 5, DRF, PostgreSQL, Redis, Whitenoise for static files, JWT auth with SimpleJWT.
-- **API domain:** products, categories, images, carts, orders, authentication endpoints, password reset.
-- **Search:** Algolia indexing pipeline (ready to swap for Elasticsearch if required).
-- **Frontend:** Next.js app router, TypeScript, Algolia InstantSearch, credential auth via NextAuth, cart & checkout (Zustand state).
-- **Infrastructure:** Docker/Docker Compose, gunicorn, demo data loader, `.env` templates.
+| Layer | Tech | Highlights |
+| --- | --- | --- |
+| Backend | Django 5, DRF, PostgreSQL, Redis, django-filter, django-taggit, django-ckeditor | Products, categories, carts, orders, SimpleJWT, password reset, soft delete, blog (CKEditor body, tags), SEO meta fields |
+| Frontend | Next.js 15 (App Router), TypeScript, Zustand, NextAuth, Algolia InstantSearch | Catalog with filters/sorting/search, cart & checkout, account/profile forms, blog pages, dynamic metadata |
+| Infra | Docker Compose, gunicorn, whitenoise | Local dev parity, `load_demo_data`, Algolia sync |
 
-## Backend quick start (Docker)
+---
+
+## Getting Started
+
+### 1. Environment setup
+
 ```bash
 cp .env.example .env
-# Update secrets, DB passwords, Algolia keys, JWT lifetimes if needed
-
-docker compose up --build
-
-docker compose exec web python backend/manage.py createsuperuser
-# optional demo catalogue
-docker compose exec web python backend/manage.py load_demo_data --reset --products 120
+cp frontend/.env.local.example frontend/.env.local
 ```
-- Admin panel: <http://localhost:8000/admin/>
-- API root (products, categories, carts, orders…): <http://localhost:8000/api/>
-- Auth endpoints:
-  - `POST /api/auth/register/`
-  - `POST /api/auth/login/` (username or email + password, returns JWT pair)
-  - `POST /api/auth/refresh/`
-  - `GET/PATCH /api/auth/me/`
-  - `POST /api/auth/password/reset/`
-  - `POST /api/auth/password/reset/confirm/`
-- Cart endpoints:
-  - `POST /api/carts/` — create anonymous cart
-  - `GET /api/carts/<uuid>/` — fetch cart with items
-  - `POST /api/carts/<uuid>/items/` — add product (or increase quantity)
-  - `PATCH /api/carts/<uuid>/items/<id>/`, `DELETE ...` — update/remove line items
-- Orders:
-  - `POST /api/orders/` — checkout (triggers confirmation email)
 
-### Environment highlights
-```
+Key variables (fill in as needed):
+
+```env
+# Backend
+DJANGO_SECRET_KEY=change-me
+POSTGRES_*  # credentials for dockerised Postgres
+REDIS_PORT=6379
 ALGOLIA_APP_ID=...
 ALGOLIA_ADMIN_API_KEY=...
-ALGOLIA_SEARCH_API_KEY=...   # search-only, used by frontend
+ALGOLIA_SEARCH_API_KEY=...
 ALGOLIA_INDEX_NAME=shop_products
-JWT_ACCESS_TOKEN_MINUTES=60
-JWT_REFRESH_TOKEN_DAYS=7
-DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
-DJANGO_DEFAULT_FROM_EMAIL=no-reply@example.com
 FRONTEND_PASSWORD_RESET_URL=http://localhost:3000/reset-password
-```
-Backend automatically syncs products to Algolia on save; run a full reindex with:
-```bash
-docker compose exec web python backend/manage.py sync_algolia_products --clear
-```
-By default emails are printed to console; set `DJANGO_EMAIL_BACKEND`, SMTP credentials and `DJANGO_DEFAULT_FROM_EMAIL` for real delivery.
 
-## Frontend (Next.js)
+# Frontend
+NEXT_PUBLIC_API_BASE_URL=http://172.25.96.1:8000   # or your backend host
+NEXT_PUBLIC_SITE_URL=http://localhost:3000        # used for metadata + sitemap
+AUTH_SECRET=super-secret
+NEXT_PUBLIC_ALGOLIA_*  # matching the backend keys
+```
+
+### 2. Launch via Docker
+
+```bash
+docker compose up --build
+# create an admin for testing
+docker compose exec web python backend/manage.py createsuperuser
+# (optional) seed catalogue & blog
+docker compose exec web python backend/manage.py load_demo_data --reset --products 120
+```
+
+Post migrate reminder:
+```bash
+docker compose exec web python backend/manage.py migrate
+```
+
+> `load_demo_data` now accepts `--products N` and seeds 120 SKUs by default (products, categories, images). It also works with the new search/filter pipeline.
+
+### 3. Frontend
+
 ```bash
 cd frontend
-cp .env.local.example .env.local
 npm install
 npm run dev
 ```
-- Storefront: <http://localhost:3000/>
-- Sign in: `/signin`
-- Sign up: `/signup`
-- Account dashboard (requires auth): `/account`
-- Cart and checkout: `/cart`, `/checkout`, `/checkout/success`, password reset via `/forgot-password` and `/reset-password`
 
-`AUTH_SECRET` in `.env.local` powers NextAuth session encryption. The app uses the credential provider, talking to Django's JWT endpoints. Access/refresh tokens are stored in the NextAuth JWT and refreshed automatically.  
-Forgot/reset flow: `/forgot-password`, `/reset-password?uid=<uid>&token=<token>`.
+Front routes:
 
-## Configuration reference
-- `frontend/src/lib/config.ts` – shared base URL for the Django API.
-- `frontend/src/lib/authOptions.ts` - NextAuth setup, token refresh logic.
-- `frontend/src/lib/cartStore.ts` - Zustand store for cart and checkout state.
-- `frontend/src/app/api/auth/[...nextauth]/route.ts` - NextAuth handler.
-- `frontend/src/app/cart/page.tsx`, `/checkout/page.tsx` - cart UI and checkout form.
-- `frontend/src/components/AccountProfileForm.tsx` - profile update form, PATCH `/api/auth/me/`.
+- Storefront: `http://localhost:3000/`
+- Auth: `/signin`, `/signup`, `/forgot-password`, `/reset-password`
+- Cart & checkout: `/cart`, `/checkout`, `/checkout/success`
+- Account dashboard: `/account`
+- Catalog: `/products` (filters/search/sort UI)
+- Blog: `/blog`, `/blog/[slug]`
 
-## Useful commands
+---
+
+## Backend Highlights
+
+### Core apps
+- **shop** — products, categories, images, carts, orders.
+  - Soft-delete via `SoftDeleteModel` (products, orders). Admin actions: archive/restore/permanently delete.
+  - SEO fields on products & categories (`meta_title`, `meta_description`, `meta_keywords`).
+  - Filtering & sorting `/api/products/`: `?category=slug|id`, `?min_price`, `?max_price`, `?in_stock=true`, `?search=term` (handles `е/ё`, case), `?ordering=price|-price|name|-name|created_at|-created_at`.
+- **accounts** — JWT auth (SimpleJWT), profile updates, password reset.
+- **content** — blog posts with tags & CKEditor body.
+  - Model fields: `title`, `slug`, `summary`, `body`, `tags`, `meta_*`, `og_image`, publish state (`is_published`, `published_at`).
+  - Admin WYSIWYG: CKEditor 4 (warns about LTS — evaluate CKEditor 5 before production).
+
+### REST API overview
+
+Base path: `http://localhost:8000/api/`
+
+| Endpoint | Method(s) | Notes |
+| --- | --- | --- |
+| `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/me`, `/auth/password/reset` | POST, GET/PATCH | JWT credential login, profile, password reset |
+| `/products/` | GET, POST | Filter/sort; `POST` requires admin |
+| `/products/<slug>/` | GET, PATCH, DELETE | Soft delete aware |
+| `/categories/` | GET, POST | Includes meta fields |
+| `/carts/` | POST, GET, DELETE | Returns cart with line items |
+| `/carts/<uuid>/items/` | POST | Add/update/remove cart lines |
+| `/orders/` | GET, POST | Checkout -> creates order, sends confirmation mail |
+| `/content/posts/` | GET, POST | `GET` returns published posts; admin sees drafts |
+| `/content/posts/<slug>/` | GET, PATCH, DELETE | Detailed article body + metadata |
+
+### Search / Algolia
+- The Django app pushes updates to Algolia (see `shop/search.py` for sync logic). Use:
+  ```bash
+  docker compose exec web python backend/manage.py sync_algolia_products --clear
+  ```
+- Frontend dropdown (Algolia InstantSearch) shows 5 hits and a “Show all results (N)” link → goes to `/products?search=...`.
+
+### Sitemap & robots
+- `GET /sitemap.xml` aggregates products & blog posts (with `lastmod`).
+- `GET /robots.txt` references the sitemap. Base URL derives from `NEXT_PUBLIC_SITE_URL` or `SITE_URL` on backend.
+
+---
+
+## Frontend Highlights
+
+- **Catalog filters** (`src/components/CatalogFilters.tsx`): search term, category, price range, in-stock checkbox, ordering. Results are paginated with infinite scroll (`ProductsInfiniteList`) and always fetch fresh data when filters change.
+- **SEO utilities** (`src/lib/seo.ts`): default metadata, `absoluteUrl`, `DEFAULT_OG_IMAGE`. Used in layout and page-level `generateMetadata` (product & blog pages).
+- **Layout**: server-side `app/layout.tsx` with shared metadata, client-side `LayoutProviders` manages session/auth, nav (incl. blog link), search, footer.
+- **Blog UI**:
+  - `/blog`: paginated summaries, optional `?page=2`, `?tag=...`, `?search=`.
+  - `/blog/[slug]`: detailed article (uses metadata, OG image, keywords, tags). Content is rendered from HTML (`dangerouslySetInnerHTML` from CKEditor output).
+
+---
+
+## Admin & CMS Tips
+
+- Django admin now has two sections:
+  - **Shop**: manage products/categories (SEO fields visible in edit form, actions for archiving/restoring).
+  - **Content**: create blog posts using CKEditor, assign tags, schedule publish (`is_published`, `published_at`).
+  - Soft-deleted items remain in DB; use actions *Restore selected* or *Permanently delete*.
+- CKEditor 4 ships with `django-ckeditor`; consider upgrading to CKEditor 5 in production (current package warns about EOL support).
+
+---
+
+## Useful commands (recap)
+
 ```bash
-# migrations / static assets
+# Apply migrations
 docker compose exec web python backend/manage.py migrate
-docker compose exec web python backend/manage.py collectstatic --noinput
 
-# demo catalogue
-docker compose exec web python backend/manage.py load_demo_data --reset --products 120
+# Install new deps if requirements changed
+docker compose exec web pip install -r requirements.txt
+
+# Soft-delete recovery (example)
+docker compose exec web python backend/manage.py shell -c "from shop.models import Product; Product.all_objects.get(slug='slug').restore()"
 
 # Algolia reindex
 docker compose exec web python backend/manage.py sync_algolia_products
 
-# frontend
-docker compose exec web npm install
-docker compose exec web npm run dev
-cd frontend && npm run build
+# Blog API examples
+curl http://localhost:8000/api/content/posts/
+curl http://localhost:8000/api/content/posts/<slug>/
 ```
 
-## Next steps
-- Integrate payments (Stripe, YooKassa, etc.) and webhook processing.
-- Introduce background jobs (Celery + Redis) for emails, stock sync, analytics.
-- Replace Algolia with Elasticsearch/OpenSearch if you need self-hosted search.
-- Automate CI/CD: tests, container builds, migrations on deploy.
+---
+
+## Roadmap / Ideas
+- Integrate payments (Stripe/ЮKassa) and webhook handlers.
+- Background jobs (Celery + Redis) for email send-outs, stock sync, indexing.
+- Evaluate CKEditor 5 or another rich-text editor for long-term support.
+- Add JSON-LD structured data for products and blog posts.
+- CI/CD: automated tests, linting, image builds.

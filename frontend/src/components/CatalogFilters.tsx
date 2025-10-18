@@ -15,6 +15,7 @@ const ORDER_OPTIONS: Array<{ value: string; label: string }> = [
 ];
 
 export type CatalogFilterValues = {
+  search?: string;
   category?: string;
   min_price?: string;
   max_price?: string;
@@ -29,6 +30,7 @@ type CatalogFiltersProps = {
 
 function buildQueryString(values: CatalogFilterValues) {
   const params = new URLSearchParams();
+  if (values.search) params.set("search", values.search);
   if (values.category) params.set("category", values.category);
   if (values.min_price) params.set("min_price", values.min_price);
   if (values.max_price) params.set("max_price", values.max_price);
@@ -44,7 +46,9 @@ export function CatalogFilters({ categories, initialValues }: CatalogFiltersProp
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
+      const rawSearch = (formData.get("search") as string) ?? "";
       const nextValues: CatalogFilterValues = {
+        search: rawSearch.trim() || undefined,
         category: (formData.get("category") as string) || undefined,
         min_price: (formData.get("min_price") as string) || undefined,
         max_price: (formData.get("max_price") as string) || undefined,
@@ -63,6 +67,10 @@ export function CatalogFilters({ categories, initialValues }: CatalogFiltersProp
   }, [router]);
   return (
     <form className="catalog-filters" onSubmit={handleSubmit}>
+      <label className="catalog-filters__search">
+        <span>Search</span>
+        <input type="search" name="search" placeholder="Search products" defaultValue={initialValues.search ?? ""} />
+      </label>
       <label>
         <span>Category</span>
         <select name="category" defaultValue={initialValues.category ?? ""}>
@@ -107,6 +115,8 @@ export function CatalogFilters({ categories, initialValues }: CatalogFiltersProp
     </form>
   );
 }
+
+
 
 
 

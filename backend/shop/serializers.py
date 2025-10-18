@@ -25,8 +25,18 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ("id", "name", "slug", "description", "is_active")
-        read_only_fields = ("id", "slug")
+        fields = (
+            "id",
+            "name",
+            "slug",
+            "description",
+            "meta_title",
+            "meta_description",
+            "is_active",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("id", "slug", "created_at", "updated_at")
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -49,13 +59,18 @@ class ProductSerializer(serializers.ModelSerializer):
             "sku",
             "short_description",
             "description",
+            "meta_title",
+            "meta_description",
+            "meta_keywords",
             "price",
             "currency",
             "stock",
             "is_active",
             "images",
+            "created_at",
+            "updated_at",
         )
-        read_only_fields = ("id", "slug")
+        read_only_fields = ("id", "slug", "created_at", "updated_at")
 
 
 class CartItemSerializer(serializers.ModelSerializer):

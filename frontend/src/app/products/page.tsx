@@ -1,11 +1,13 @@
-﻿import { CatalogFilters } from "@/components/CatalogFilters";
+﻿export const dynamic = "force-dynamic";
+
+import { CatalogFilters } from "@/components/CatalogFilters";
 import { ProductsInfiniteList } from "@/components/ProductsInfiniteList";
 import { fetchCategories, fetchProductsPage } from "@/lib/api";
 
 const PAGE_SIZE = 12;
 
 type ProductsPageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 function normalizeParam(value?: string | string[]): string | undefined {
@@ -37,16 +39,29 @@ function sanitizeOrdering(value?: string): string | undefined {
   return allowed.has(value) ? value : undefined;
 }
 
+function sanitizeSearch(value?: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  return trimmed.slice(0, 120);
+}
+
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const params = searchParams ?? {};
+  const params = searchParams ? await searchParams : {};
   const category = normalizeParam(params.category);
   const minPrice = sanitizePrice(normalizeParam(params.min_price));
   const maxPrice = sanitizePrice(normalizeParam(params.max_price));
   const rawInStock = normalizeParam(params.in_stock);
   const inStock = rawInStock === "true" || rawInStock === "1" ? "true" : undefined;
   const ordering = sanitizeOrdering(normalizeParam(params.ordering));
+  const searchTerm = sanitizeSearch(normalizeParam(params.search));
 
   const queryParams: Record<string, string | undefined> = {
+    search: searchTerm,
     category,
     min_price: minPrice,
     max_price: maxPrice,
@@ -60,6 +75,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   ]);
 
   const filterValues = {
+    search: searchTerm,
     category,
     min_price: minPrice,
     max_price: maxPrice,
@@ -73,7 +89,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <div className="catalog-controls">
           <div className="section-header">
             <h1>Catalog</h1>
-            <p>Products are synced from Django. Use search and filters to navigate quickly.</p>
+            {searchTerm ? (
+              <p>
+                Showing results for <strong>{searchTerm}</strong>. Adjust filters to refine the list.
+              </p>
+            ) : (
+              <p>Products are synced from Django. Use search and filters to navigate quickly.</p>
+            )}
           </div>
           <CatalogFilters categories={categories} initialValues={filterValues} />
         </div>
@@ -88,3 +110,4 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     </section>
   );
 }
+

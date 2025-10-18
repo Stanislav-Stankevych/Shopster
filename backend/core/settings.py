@@ -1,4 +1,4 @@
-"""
+﻿"""
 Django settings for the ecommerce backend.
 """
 
@@ -40,8 +40,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     "corsheaders",
+    "taggit",
+    "ckeditor",
     "accounts",
     "shop",
+    "content",
 ]
 
 MIDDLEWARE = [
@@ -185,3 +188,13 @@ EMAIL_HOST_USER = os.getenv("DJANGO_EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("DJANGO_EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = getenv_bool("DJANGO_EMAIL_USE_TLS", True)
 FRONTEND_PASSWORD_RESET_URL = os.getenv("FRONTEND_PASSWORD_RESET_URL", "http://localhost:3000/reset-password")
+
+CKEDITOR_UPLOAD_PATH = "uploads/ckeditor/"
+CKEDITOR_CONFIGS = {
+    "default": {
+        "toolbar": "Full",
+        "height": 400,
+        "width": "auto",
+    }
+}
+

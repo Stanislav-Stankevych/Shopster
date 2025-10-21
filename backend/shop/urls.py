@@ -6,6 +6,7 @@ from .views import (
     CartViewSet,
     CategoryViewSet,
     OrderViewSet,
+    ProductReviewViewSet,
     ProductViewSet,
     StatisticsOverviewView,
 )
@@ -15,6 +16,7 @@ router.register("categories", CategoryViewSet, basename="category")
 router.register("products", ProductViewSet, basename="product")
 router.register("carts", CartViewSet, basename="cart")
 router.register("orders", OrderViewSet, basename="order")
+router.register("reviews", ProductReviewViewSet, basename="review")
 
 cart_items_list = CartItemViewSet.as_view({"get": "list", "post": "create"})
 cart_items_detail = CartItemViewSet.as_view({"patch": "partial_update", "delete": "destroy"})

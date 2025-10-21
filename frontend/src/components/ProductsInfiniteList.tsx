@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -16,11 +16,13 @@ type ProductsInfiniteListProps = {
 const DEFAULT_ERROR_MESSAGE = "Could not load products. Please try again.";
 
 function getApiBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
+  const envBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (envBase) {
+    return envBase.replace(/\/$/, "");
   }
   if (typeof window !== "undefined") {
-    return window.location.origin;
+    const { protocol, hostname } = window.location;
+    return `${protocol}//${hostname}:8000`;
   }
   return "http://localhost:8000";
 }
@@ -87,14 +89,11 @@ export function ProductsInfiniteList({
       const response = await fetch(url.toString(), {
         headers: { Accept: "application/json" },
       });
-
       if (!response.ok) {
         throw new Error(DEFAULT_ERROR_MESSAGE);
       }
-
       const data = await response.json();
       const newItems: Product[] = Array.isArray(data.results) ? data.results : data;
-
       setItems((prev) => [...prev, ...newItems]);
       setNextPage(extractNextPage(data.next, apiBaseUrl));
       if (typeof data.count === "number") {
@@ -115,25 +114,18 @@ export function ProductsInfiniteList({
     if (!target) {
       return;
     }
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            loadMore().catch(() => {
-              /* error handled in state */
-            });
+            loadMore().catch(() => {});
           }
         });
       },
       { rootMargin: "200px" }
     );
-
     observer.observe(target);
-
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [error, hasMore, loadMore]);
 
   return (
@@ -152,12 +144,7 @@ export function ProductsInfiniteList({
         </p>
         {error && <p className="catalog-error">{error}</p>}
         {hasMore && (
-          <button
-            className="btn btn-secondary"
-            type="button"
-            onClick={() => loadMore().catch(() => undefined)}
-            disabled={isLoading}
-          >
+          <button className="btn btn-secondary" type="button" onClick={() => loadMore().catch(() => undefined)} disabled={isLoading}>
             {isLoading ? "Loading..." : "Load more"}
           </button>
         )}
@@ -166,7 +153,4 @@ export function ProductsInfiniteList({
     </>
   );
 }
-
-
-
 

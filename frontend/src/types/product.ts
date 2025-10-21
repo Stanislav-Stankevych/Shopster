@@ -1,4 +1,31 @@
-﻿export type Product = {
+export type ReviewUser = {
+  id: number;
+  name: string;
+};
+
+export type ReviewProductInfo = {
+  id: number;
+  slug: string;
+  name: string;
+};
+
+export type ProductReview = {
+  id: number;
+  product?: ReviewProductInfo;
+  product_id?: number;
+  rating: number;
+  title: string;
+  body: string;
+  verified_purchase: boolean;
+  moderation_status: "pending" | "approved" | "rejected";
+  moderation_note?: string;
+  created_at: string;
+  updated_at: string;
+  user: ReviewUser;
+  is_owner: boolean;
+};
+
+export type Product = {
   id: number;
   name: string;
   slug: string;
@@ -28,6 +55,10 @@
     alt_text: string;
     is_main: boolean;
   }>;
+  average_rating: number | null;
+  reviews_count: number;
+  can_review: boolean;
+  user_review: ProductReview | null;
   created_at?: string;
   updated_at?: string;
 };

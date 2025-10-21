@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+
 class Migration(migrations.Migration):
 
     initial = True
@@ -27,18 +28,19 @@ class Migration(migrations.Migration):
                 ('meta_title', models.CharField(blank=True, max_length=255)),
                 ('meta_description', models.CharField(blank=True, max_length=500)),
                 ('meta_keywords', models.CharField(blank=True, max_length=255)),
+                ('author', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='posts', to=settings.AUTH_USER_MODEL)),
                 ('og_image', models.ImageField(blank=True, null=True, upload_to='blog/')),
                 ('is_published', models.BooleanField(default=False)),
                 ('published_at', models.DateTimeField(blank=True, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('author', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='posts', to=settings.AUTH_USER_MODEL)),
-                ('tags', taggit.managers.TaggableManager(blank=True, help_text='A comma-separated list of tags.', through='taggit.TaggedItem', to='taggit.Tag', verbose_name='Tags')),
+                ('tags', taggit.managers.TaggableManager(blank=True, through='taggit.TaggedItem', to='taggit.Tag', verbose_name='Tags')),
             ],
             options={
-                'verbose_name': 'Запись',
+                'verbose_name': 'Post',
                 'verbose_name_plural': 'Posts',
                 'ordering': ('-published_at', '-created_at'),
             },
         ),
     ]
+

@@ -1,4 +1,4 @@
-п»ї# Shopster В· Full-stack Commerce Platform
+# Shopster · Full-stack Commerce Platform
 
 Shopster is a production-ready ecommerce starter that pairs **Django REST Framework** + **PostgreSQL + Redis** on the backend with a **Next.js 15 / TypeScript** storefront. The stack ships with JWT authentication, Algolia search, soft-delete aware catalog management, an admin-friendly content/blog module, and SEO tooling (metadata helpers, sitemap, OpenGraph defaults).
 
@@ -6,7 +6,7 @@ Shopster is a production-ready ecommerce starter that pairs **Django REST Framew
 
 | Layer | Tech | Highlights |
 | --- | --- | --- |
-| Backend | Django 5, DRF, PostgreSQL, Redis, django-filter, django-taggit, django-ckeditor | Products, categories, carts, orders, SimpleJWT, password reset, soft delete, blog (CKEditor body, tags), SEO meta fields |
+| Backend | Django 5, DRF, PostgreSQL, Redis, django-filter, django-taggit, django-quill-editor | Products, categories, carts, orders, SimpleJWT, password reset, soft delete, blog (Quill body, tags), SEO meta fields |
 | Frontend | Next.js 15 (App Router), TypeScript, Zustand, NextAuth, Algolia InstantSearch | Catalog with filters/sorting/search, cart & checkout, account/profile forms, blog pages, dynamic metadata |
 | Infra | Docker Compose, gunicorn, whitenoise | Local dev parity, `load_demo_data`, Algolia sync |
 
@@ -35,7 +35,7 @@ ALGOLIA_INDEX_NAME=shop_products
 FRONTEND_PASSWORD_RESET_URL=http://localhost:3000/reset-password
 
 # Frontend
-NEXT_PUBLIC_API_BASE_URL=http://172.25.96.1:8000   # or your backend host
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000     # backend host exposed to the browser
 NEXT_PUBLIC_SITE_URL=http://localhost:3000        # used for metadata + sitemap
 AUTH_SECRET=super-secret
 NEXT_PUBLIC_ALGOLIA_*  # matching the backend keys
@@ -80,14 +80,14 @@ Front routes:
 ## Backend Highlights
 
 ### Core apps
-- **shop** вЂ” products, categories, images, carts, orders.
+- **shop** — products, categories, images, carts, orders.
   - Soft-delete via `SoftDeleteModel` (products, orders). Admin actions: archive/restore/permanently delete.
   - SEO fields on products & categories (`meta_title`, `meta_description`, `meta_keywords`).
-  - Filtering & sorting `/api/products/`: `?category=slug|id`, `?min_price`, `?max_price`, `?in_stock=true`, `?search=term` (handles `Рµ/С‘`, case), `?ordering=price|-price|name|-name|created_at|-created_at`.
-- **accounts** вЂ” JWT auth (SimpleJWT), profile updates, password reset.
-- **content** вЂ” blog posts with tags & CKEditor body.
+  - Filtering & sorting `/api/products/`: `?category=slug|id`, `?min_price`, `?max_price`, `?in_stock=true`, `?search=term` (handles `е/ё`, case), `?ordering=price|-price|name|-name|created_at|-created_at`.
+- **accounts** — JWT auth (SimpleJWT), profile updates, password reset.
+- **content** - blog posts with tags & Quill body.
   - Model fields: `title`, `slug`, `summary`, `body`, `tags`, `meta_*`, `og_image`, publish state (`is_published`, `published_at`).
-  - Admin WYSIWYG: CKEditor 4 (warns about LTS вЂ” evaluate CKEditor 5 before production).
+  - Admin WYSIWYG: Quill (via django-quill-editor, customizable toolbar).
 
 ### REST API overview
 
@@ -102,6 +102,7 @@ Base path: `http://localhost:8000/api/`
 | `/carts/` | POST, GET, DELETE | Returns cart with line items |
 | `/carts/<uuid>/items/` | POST | Add/update/remove cart lines |
 | `/orders/` | GET, POST | Checkout -> creates order, sends confirmation mail |
+| `/reviews/` | GET, POST, PATCH, DELETE | Product reviews with moderation (POST доступен только покупателям) |
 | `/content/posts/` | GET, POST | `GET` returns published posts; admin sees drafts |
 | `/content/posts/<slug>/` | GET, PATCH, DELETE | Detailed article body + metadata |
 
@@ -110,7 +111,7 @@ Base path: `http://localhost:8000/api/`
   ```bash
   docker compose exec web python backend/manage.py sync_algolia_products --clear
   ```
-- Frontend dropdown (Algolia InstantSearch) shows 5 hits and a вЂњShow all results (N)вЂќ link в†’ goes to `/products?search=...`.
+- Frontend dropdown (Algolia InstantSearch) shows 5 hits and a “Show all results (N)” link > goes to `/products?search=...`.
 
 ### Sitemap & robots
 - `GET /sitemap.xml` aggregates products & blog posts (with `lastmod`).
@@ -121,11 +122,12 @@ Base path: `http://localhost:8000/api/`
 ## Frontend Highlights
 
 - **Catalog filters** (`src/components/CatalogFilters.tsx`): search term, category, price range, in-stock checkbox, ordering. Results are paginated with infinite scroll (`ProductsInfiniteList`) and always fetch fresh data when filters change.
+- **Product reviews** (`src/components/ProductReviews.tsx`): на карточке товара отображаются рейтинг, список отзывов с модерацией, форма создания/редактирования для покупателей (после совершения заказа).
 - **SEO utilities** (`src/lib/seo.ts`): default metadata, `absoluteUrl`, `DEFAULT_OG_IMAGE`. Used in layout and page-level `generateMetadata` (product & blog pages).
 - **Layout**: server-side `app/layout.tsx` with shared metadata, client-side `LayoutProviders` manages session/auth, nav (incl. blog link), search, footer.
 - **Blog UI**:
   - `/blog`: paginated summaries, optional `?page=2`, `?tag=...`, `?search=`.
-  - `/blog/[slug]`: detailed article (uses metadata, OG image, keywords, tags). Content is rendered from HTML (`dangerouslySetInnerHTML` from CKEditor output).
+  - `/blog/[slug]`: detailed article (uses metadata, OG image, keywords, tags). Content is rendered from HTML produced by Quill.
 
 ---
 
@@ -133,9 +135,9 @@ Base path: `http://localhost:8000/api/`
 
 - Django admin now has two sections:
   - **Shop**: manage products/categories (SEO fields visible in edit form, actions for archiving/restoring).
-  - **Content**: create blog posts using CKEditor, assign tags, schedule publish (`is_published`, `published_at`).
+  - **Content**: create blog posts using Quill, assign tags, schedule publish (`is_published`, `published_at`).
   - Soft-deleted items remain in DB; use actions *Restore selected* or *Permanently delete*.
-- CKEditor 4 ships with `django-ckeditor`; consider upgrading to CKEditor 5 in production (current package warns about EOL support).
+- Quill is bundled via `django-quill-editor`; customize toolbar/themes as needed.
 
 ---
 
@@ -162,8 +164,10 @@ curl http://localhost:8000/api/content/posts/<slug>/
 ---
 
 ## Roadmap / Ideas
-- Integrate payments (Stripe/Р®Kassa) and webhook handlers.
+- Integrate payments (Stripe/ЮKassa) and webhook handlers.
 - Background jobs (Celery + Redis) for email send-outs, stock sync, indexing.
-- Evaluate CKEditor 5 or another rich-text editor for long-term support.
+- Adjust Quill modules (toolbar, themes) as needed.
 - Add JSON-LD structured data for products and blog posts.
 - CI/CD: automated tests, linting, image builds.
+
+

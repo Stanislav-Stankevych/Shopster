@@ -74,7 +74,11 @@ export default function CheckoutPage() {
       try {
         setError(null);
         const order = await checkout(orderPayload);
-        router.push(`/checkout/success?order=${order.id}`);
+        const params = new URLSearchParams({ order: String(order.id) });
+        if (order.requires_account_activation && order.activation_email) {
+          params.set("activationEmail", order.activation_email);
+        }
+        router.push(`/checkout/success?${params.toString()}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to submit order.");
       }
@@ -155,7 +159,10 @@ export default function CheckoutPage() {
               <span>Total</span>
               <span>{formatCurrency(currency, subtotal)}</span>
             </div>
-            <p className="checkout-summary__hint">A confirmation email will be sent once the order is placed.</p>
+            <p className="checkout-summary__hint">
+              A confirmation email will be sent once the order is placed. Guest checkouts receive an additional email with
+              a link to set a password and activate the automatically created account.
+            </p>
           </aside>
         </div>
       </div>

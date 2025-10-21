@@ -1,12 +1,19 @@
 from django import forms
 from django.contrib import admin
-from ckeditor.widgets import CKEditorWidget
+from django_quill.widgets import QuillWidget
 
 from .models import Post
 
 
 class PostAdminForm(forms.ModelForm):
-    body = forms.CharField(widget=CKEditorWidget())
+    body = forms.CharField(
+        widget=QuillWidget(
+            attrs={
+                "style": "min-height: 400px;",
+                "placeholder": "Write the article body here...",
+            }
+        )
+    )
 
     class Meta:
         model = Post

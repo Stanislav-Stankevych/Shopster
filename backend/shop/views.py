@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
@@ -7,18 +7,23 @@ from typing import Any
 import logging
 
 from django.conf import settings
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
+from django.db import IntegrityError
+from django.db.models import Avg, Count, Sum, Q
 from django.shortcuts import get_object_or_404
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from django.utils.timezone import make_aware
-from django.db.models import Count, Sum
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, status, viewsets, serializers
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import ProductFilter
-from .models import Cart, CartItem, Category, Order, OrderItem, Product
-from .permissions import IsAdminOrReadOnly
+from .models import Cart, CartItem, Category, Order, OrderItem, Product, ProductReview
+from .permissions import IsAdminOrReadOnly, IsReviewAuthorOrStaff
 from .serializers import (
     CartItemSerializer,
     CartSerializer,
@@ -26,7 +31,9 @@ from .serializers import (
     OrderCreateSerializer,
     OrderSerializer,
     ProductSerializer,
+    ProductReviewSerializer,
 )
+from .utils import user_has_verified_purchase
 
 logger = logging.getLogger(__name__)
 
@@ -39,13 +46,35 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.select_related("category").prefetch_related("images")
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly]
     lookup_field = "slug"
     filterset_class = ProductFilter
     ordering_fields = ("price", "created_at", "name")
     ordering = ("name",)
+
+    def get_queryset(self):
+        return (
+            Product.objects.select_related("category")
+            .prefetch_related("images")
+            .annotate(
+                reviews_count=Count(
+                    "reviews",
+                    filter=Q(
+                        reviews__moderation_status=ProductReview.ModerationStatus.APPROVED,
+                        reviews__deleted_at__isnull=True,
+                    ),
+                    distinct=True,
+                ),
+                average_rating=Avg(
+                    "reviews__rating",
+                    filter=Q(
+                        reviews__moderation_status=ProductReview.ModerationStatus.APPROVED,
+                        reviews__deleted_at__isnull=True,
+                    ),
+                ),
+            )
+        )
 
 
 class CartViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
@@ -94,6 +123,92 @@ class CartItemViewSet(
         serializer.save()
 
 
+class ProductReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ProductReviewSerializer
+    lookup_field = "id"
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [IsAuthenticated()]
+        if self.action in {"update", "partial_update", "destroy"}:
+            return [IsAuthenticated(), IsReviewAuthorOrStaff()]
+        if self.action == "moderate":
+            return [IsAdminUser()]
+        return [AllowAny()]
+
+    def get_queryset(self):
+        qs = ProductReview.all_objects.filter(deleted_at__isnull=True).select_related("product", "user")
+        request = self.request
+        product_id = request.query_params.get("product")
+        product_slug = request.query_params.get("product_slug")
+        if product_id:
+            qs = qs.filter(product_id=product_id)
+        if product_slug:
+            qs = qs.filter(product__slug=product_slug)
+
+        if request.user.is_staff:
+            moderation = request.query_params.get("moderation")
+            if moderation in ProductReview.ModerationStatus.values:
+                qs = qs.filter(moderation_status=moderation)
+            return qs.order_by("-created_at")
+
+        visibility = Q(moderation_status=ProductReview.ModerationStatus.APPROVED)
+        if request.user.is_authenticated:
+            visibility |= Q(user=request.user)
+        return qs.filter(visibility).order_by("-created_at")
+
+    def perform_create(self, serializer):
+        product = serializer.validated_data["product"]
+        user = self.request.user
+        if not user_has_verified_purchase(user, product):
+            raise serializers.ValidationError({"detail": "You can only leave a review after purchasing this product."})
+        try:
+            serializer.save(
+                user=user,
+                verified_purchase=True,
+                moderation_status=ProductReview.ModerationStatus.PENDING,
+            )
+        except IntegrityError as exc:
+            raise serializers.ValidationError(
+                {"non_field_errors": ["You have already submitted a review for this product."]}
+            ) from exc
+
+    def perform_update(self, serializer):
+        review = serializer.save()
+        if not review.verified_purchase:
+            review.verified_purchase = user_has_verified_purchase(review.user, review.product)
+        review.moderation_status = ProductReview.ModerationStatus.PENDING
+        review.moderated_by = None
+        review.moderated_at = None
+        review.moderation_note = ""
+        review.save(
+            update_fields=[
+                "verified_purchase",
+                "moderation_status",
+                "moderated_by",
+                "moderated_at",
+                "moderation_note",
+                "updated_at",
+            ]
+        )
+
+    def perform_destroy(self, instance):
+        instance.delete()
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAdminUser])
+    def moderate(self, request, *args, **kwargs):
+        review = self.get_object()
+        status_value = request.data.get("status")
+        note = request.data.get("note", "")
+        if status_value not in ProductReview.ModerationStatus.values:
+            raise serializers.ValidationError({"status": "Invalid moderation status."})
+        review.mark_moderated(status=status_value, moderator=request.user, note=note)
+        serializer = self.get_serializer(review)
+        return Response(serializer.data)
+
+
+
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -123,9 +238,16 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
         output_serializer = OrderSerializer(order, context=self.get_serializer_context())
+        auto_registered_user = getattr(serializer, "auto_registered_user", None)
+        if auto_registered_user:
+            self._send_account_setup_email(auto_registered_user)
+        response_payload = dict(output_serializer.data)
+        response_payload["requires_account_activation"] = bool(auto_registered_user)
+        if auto_registered_user and auto_registered_user.email:
+            response_payload["activation_email"] = auto_registered_user.email
         self._send_confirmation_email(order)
         headers = self.get_success_headers(output_serializer.data)
-        return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(response_payload, status=status.HTTP_201_CREATED, headers=headers)
 
     def _send_confirmation_email(self, order: Order) -> None:
         if not order.customer_email:
@@ -156,6 +278,31 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
         except Exception as exc:  # pragma: no cover
             logger.warning("Failed to send order confirmation email: %s", exc)
+
+    def _send_account_setup_email(self, user) -> None:
+        if not getattr(user, "email", None):
+            return
+        try:
+            token_generator = PasswordResetTokenGenerator()
+            token = token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            reset_url = f"{settings.FRONTEND_PASSWORD_RESET_URL}?uid={uid}&token={token}"
+            full_name = user.get_full_name() or user.get_username()
+            message = (
+                f"Здравствуйте, {full_name}!\n\n"
+                "Для удобства мы создали для вас аккаунт в Shopster, чтобы вы могли отслеживать свои заказы.\n"
+                f"Перейдите по ссылке, чтобы придумать пароль и завершить регистрацию:\n{reset_url}\n\n"
+                "Если вы не оформляли заказ или не хотите создавать аккаунт, просто проигнорируйте это письмо."
+            )
+            send_mail(
+                subject="Добро пожаловать в Shopster",
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Failed to send auto-registration email: %s", exc)
 
 
 class StatisticsOverviewView(APIView):
@@ -224,5 +371,7 @@ class StatisticsOverviewView(APIView):
             "top_products": top_products,
         }
         return Response(response_payload)
+
+
 
 

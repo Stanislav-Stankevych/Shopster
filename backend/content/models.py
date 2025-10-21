@@ -38,7 +38,7 @@ class Post(models.Model):
 
     class Meta:
         ordering = ("-published_at", "-created_at")
-        verbose_name = "Запись"
+        verbose_name = "Post"
         verbose_name_plural = "Posts"
 
     def __str__(self) -> str:
@@ -68,5 +68,6 @@ class Post(models.Model):
 
         base = getattr(django_settings, "SITE_URL", "http://localhost:8000")
         return f"{base.rstrip('/')}/blog/{self.slug}"
+
 
 

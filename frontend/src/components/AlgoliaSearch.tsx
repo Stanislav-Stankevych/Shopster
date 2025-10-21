@@ -1,6 +1,7 @@
 
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
 import { Configure, InstantSearch, SearchBox, useHits, useSearchBox, useInstantSearch } from "react-instantsearch-hooks-web";
@@ -79,7 +80,7 @@ function SearchDropdown() {
           <li key={hit.objectID}>
             <Link href={`/products/${hit.slug}`}>
               {imageUrl ? (
-                <img className="header-search__thumb" src={imageUrl} alt={hit.name} />
+                <Image className="header-search__thumb" src={imageUrl} alt={hit.name} width={48} height={48} />
               ) : (
                 <div className="header-search__thumb placeholder">Нет фото</div>
               )}

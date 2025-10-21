@@ -75,8 +75,8 @@ class Category(models.Model):
 
     class Meta:
         ordering = ("name",)
-        verbose_name = "Категория"
-        verbose_name_plural = "Категории"
+        verbose_name = "РљР°С‚РµРіРѕСЂРёСЏ"
+        verbose_name_plural = "РљР°С‚РµРіРѕСЂРёРё"
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -113,8 +113,8 @@ class Product(SoftDeleteModel):
 
     class Meta:
         ordering = ("name",)
-        verbose_name = "Товар"
-        verbose_name_plural = "Товары"
+        verbose_name = "РўРѕРІР°СЂ"
+        verbose_name_plural = "РўРѕРІР°СЂС‹"
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -146,8 +146,8 @@ class ProductImage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Изображение товара"
-        verbose_name_plural = "Изображения товаров"
+        verbose_name = "РР·РѕР±СЂР°Р¶РµРЅРёРµ С‚РѕРІР°СЂР°"
+        verbose_name_plural = "РР·РѕР±СЂР°Р¶РµРЅРёСЏ С‚РѕРІР°СЂР°"
 
     def __str__(self) -> str:
         return f"{self.product.name} image"
@@ -167,8 +167,8 @@ class Cart(models.Model):
 
     class Meta:
         ordering = ("-updated_at",)
-        verbose_name = "Корзина"
-        verbose_name_plural = "Корзины"
+        verbose_name = "РљРѕСЂР·РёРЅР°"
+        verbose_name_plural = "РљРѕСЂР·РёРЅС‹"
 
     def __str__(self) -> str:
         return f"Cart {self.pk}"
@@ -198,8 +198,8 @@ class CartItem(models.Model):
 
     class Meta:
         unique_together = ("cart", "product")
-        verbose_name = "Позиция в корзине"
-        verbose_name_plural = "Позиции в корзине"
+        verbose_name = "РџРѕР·РёС†РёСЏ РєРѕСЂР·РёРЅС‹"
+        verbose_name_plural = "РџРѕР·РёС†РёРё РєРѕСЂР·РёРЅС‹"
 
     def __str__(self) -> str:
         return f"{self.quantity} x {self.product.name}"
@@ -210,16 +210,16 @@ class CartItem(models.Model):
 
 
 class Order(SoftDeleteModel):
-    class Status(models.TextChoices):
+        class Status(models.TextChoices):
         DRAFT = "draft", "Черновик"
         PENDING = "pending", "В ожидании"
         PAID = "paid", "Оплачен"
-        SHIPPED = "shipped", "Отправлен"
-        COMPLETED = "completed", "Завершен"
-        CANCELLED = "cancelled", "Отменен"
+        SHIPPED = "shipped", "Отгружен"
+        COMPLETED = "completed", "Завершён"
+        CANCELLED = "cancelled", "Отменён"
 
     class PaymentStatus(models.TextChoices):
-        PENDING = "pending", "В ожидании"
+        PENDING = "pending", "Ожидает оплаты"
         PAID = "paid", "Оплачен"
         REFUNDED = "refunded", "Возврат"
 
@@ -260,8 +260,8 @@ class Order(SoftDeleteModel):
 
     class Meta:
         ordering = ("-placed_at",)
-        verbose_name = "Заказ"
-        verbose_name_plural = "Заказы"
+        verbose_name = "Р—Р°РєР°Р·"
+        verbose_name_plural = "Р—Р°РєР°Р·С‹"
 
     def __str__(self) -> str:
         return f"Order #{self.pk}"
@@ -279,7 +279,7 @@ class Order(SoftDeleteModel):
         with transaction.atomic():
             cart = Cart.objects.select_for_update().prefetch_related("items__product").get(pk=cart.pk)
             if not cart.items.exists():
-                raise ValueError("Невозможно создать заказ из пустой корзины.")
+                raise ValueError("РќРµРІРѕР·РјРѕР¶РЅРѕ РѕС„РѕСЂРјРёС‚СЊ Р·Р°РєР°Р·: РєРѕСЂР·РёРЅР° РїСѓСЃС‚Р°.")
 
             subtotal = Decimal("0.00")
             order = cls.objects.create(
@@ -333,10 +333,98 @@ class OrderItem(models.Model):
     line_total = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
-        verbose_name = "Позиция заказа"
-        verbose_name_plural = "Позиции заказа"
+        verbose_name = "РџРѕР·РёС†РёСЏ Р·Р°РєР°Р·Р°"
+        verbose_name_plural = "РџРѕР·РёС†РёРё Р·Р°РєР°Р·Р°"
 
     def __str__(self) -> str:
         return f"{self.product_name} x {self.quantity}"
 
 
+class ProductReviewQuerySet(SoftDeleteQuerySet):
+    def approved(self):
+        return self.filter(moderation_status=ProductReview.ModerationStatus.APPROVED)
+
+
+class ProductReviewManager(SoftDeleteManager):
+    def get_queryset(self):
+        return ProductReviewQuerySet(self.model, using=self._db).alive().approved()
+
+    def with_unapproved(self):
+        return ProductReviewQuerySet(self.model, using=self._db).alive()
+
+
+class ProductReview(SoftDeleteModel):
+    class ModerationStatus(models.TextChoices):
+        PENDING = "pending", "На модерации"
+        APPROVED = "approved", "Одобрен"
+        REJECTED = "rejected", "Отклонён"
+
+    product = models.ForeignKey(
+        Product,
+        related_name="reviews",
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="product_reviews",
+        on_delete=models.CASCADE,
+    )
+    rating = models.PositiveSmallIntegerField()
+    title = models.CharField(max_length=255, blank=True)
+    body = models.TextField()
+    verified_purchase = models.BooleanField(default=False)
+    moderation_status = models.CharField(
+        max_length=20,
+        choices=ModerationStatus.choices,
+        default=ModerationStatus.PENDING,
+    )
+    moderation_note = models.TextField(blank=True)
+    moderated_at = models.DateTimeField(null=True, blank=True)
+    moderated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="moderated_product_reviews",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = ProductReviewManager()
+    all_objects = ProductReviewQuerySet.as_manager()
+
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("product", "user"),
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_active_product_review",
+            ),
+            models.CheckConstraint(
+                check=models.Q(rating__gte=1, rating__lte=5),
+                name="product_review_rating_range",
+            ),
+        ]
+        verbose_name = "Отзыв о товаре"
+        verbose_name_plural = "Отзывы о товарах"
+
+    def __str__(self) -> str:
+        return f"{self.product} review by {self.user}"
+
+    def mark_moderated(self, *, status: str, moderator, note: str = "") -> None:
+        if status not in self.ModerationStatus.values:
+            raise ValueError("Unknown moderation status")
+        self.moderation_status = status
+        self.moderated_by = moderator
+        self.moderation_note = note
+        self.moderated_at = timezone.now()
+        self.save(
+            update_fields=[
+                "moderation_status",
+                "moderated_by",
+                "moderation_note",
+                "moderated_at",
+                "updated_at",
+            ]
+        )

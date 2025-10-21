@@ -96,7 +96,8 @@ export async function fetchProduct(slug: string): Promise<Product | null> {
     return null;
   }
 
-  return response.json();
+  const data = await response.json();
+  return data as Product;
 }
 
 export async function fetchCategories(): Promise<CategorySummary[]> {
@@ -142,7 +143,8 @@ export async function fetchPost(slug: string): Promise<PostDetail | null> {
     return null;
   }
 
-  return response.json();
+  const data = await response.json();
+  return data as PostDetail;
 }
 
 

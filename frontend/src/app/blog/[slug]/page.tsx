@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 
 import { fetchPost } from "@/lib/api";
@@ -84,9 +85,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     <section className="section">
       <div className="container blog-post">
         <div className="blog-post__header">
-          <a className="btn btn-outline" href="/blog">
+          <Link className="btn btn-outline" href="/blog">
             ← Назад к блогу
-          </a>
+          </Link>
           <p className="blog-post__date">
             {post.published_at ? new Date(post.published_at).toLocaleDateString("ru-RU") : "Draft"}
           </p>

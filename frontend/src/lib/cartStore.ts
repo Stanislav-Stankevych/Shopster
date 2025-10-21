@@ -53,6 +53,13 @@ export type CheckoutPayload = {
   notes?: string;
 };
 
+export type CheckoutResult = {
+  id: number;
+  customer_email: string;
+  requires_account_activation?: boolean;
+  activation_email?: string;
+};
+
 type CartState = {
   cartId: string | null;
   items: CartItem[];
@@ -67,7 +74,7 @@ type CartState = {
   updateItem: (itemId: number, quantity: number) => Promise<void>;
   removeItem: (itemId: number) => Promise<void>;
   clearCart: () => void;
-  checkout: (payload: CheckoutPayload) => Promise<any>;
+  checkout: (payload: CheckoutPayload) => Promise<CheckoutResult>;
 };
 
 const noopStorage = {
@@ -259,7 +266,7 @@ export const useCartStore = create<CartState>()(
         resetCartState();
       },
 
-      checkout: async (payload: CheckoutPayload) => {
+      checkout: async (payload: CheckoutPayload): Promise<CheckoutResult> => {
         const { cartId, clearCart } = get();
         if (!cartId) {
           throw new Error("Cart is empty.");
@@ -277,7 +284,7 @@ export const useCartStore = create<CartState>()(
               : "Failed to submit order.";
           throw new Error(message);
         }
-        const order = await response.json();
+        const order: CheckoutResult = await response.json();
         clearCart();
         return order;
       },

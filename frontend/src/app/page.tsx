@@ -1,7 +1,7 @@
-﻿
-import { fetchProducts } from "@/lib/api";
+﻿import { fetchProducts } from "@/lib/api";
 import { ProductCard } from "@/components/ProductCard";
 import Link from "next/link";
+import { FRONTEND_ORIGIN } from "@/lib/config";
 
 export default async function HomePage() {
   const products = await fetchProducts(6);
@@ -18,9 +18,7 @@ export default async function HomePage() {
               payments, analytics, and custom experiences when you are ready.
             </p>
             <div className="cta-buttons">
-              <Link className="btn btn-primary" href="/products">
-                Explore catalog
-              </Link>
+              <a className="btn btn-primary" href={`${FRONTEND_ORIGIN}/products`}>Explore catalog</a>
               <a className="btn btn-outline" href="http://localhost:8000/admin/" target="_blank" rel="noreferrer noopener">
                 Manage products
               </a>
@@ -73,4 +71,9 @@ export default async function HomePage() {
     </>
   );
 }
+
+
+
+
+
 

@@ -1105,6 +1105,50 @@ a {
   gap: 1rem;
 }
 
+/* Product reviews form controls */
+.product-reviews .form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.product-reviews .form-grid label span {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.product-reviews input[type="text"],
+.product-reviews select,
+.product-reviews textarea {
+  width: 100%;
+  background: #fff;
+  color: var(--text);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  line-height: 1.4;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-reviews input[type="text"]::placeholder,
+.product-reviews textarea::placeholder {
+  color: rgba(100, 116, 139, 0.8);
+}
+
+.product-reviews input[type="text"]:focus,
+.product-reviews select:focus,
+.product-reviews textarea:focus {
+  border-color: rgba(37, 99, 235, 0.6);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.product-reviews textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
 .product-reviews__form h3 {
   margin: 0;
 }

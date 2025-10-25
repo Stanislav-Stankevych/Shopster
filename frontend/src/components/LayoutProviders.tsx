@@ -2,6 +2,7 @@
 
 import { PropsWithChildren } from "react";
 import Link from "next/link";
+import { FRONTEND_ORIGIN } from "@/lib/config";
 
 import { AccountMenu } from "@/components/AccountMenu";
 import { AlgoliaSearch } from "@/components/AlgoliaSearch";
@@ -21,7 +22,7 @@ export function LayoutProviders({ children }: PropsWithChildren) {
             <AlgoliaSearch />
             <nav className="nav-links">
               <Link href="/#features">Features</Link>
-              <Link href="/products">Catalog</Link>
+              <a href={`${FRONTEND_ORIGIN}/products`}>Catalog</a>
               <AdminNavLink />
             </nav>
             <CartBadge />
@@ -42,4 +43,8 @@ export function LayoutProviders({ children }: PropsWithChildren) {
     </AuthSessionProvider>
   );
 }
+
+
+
+
 

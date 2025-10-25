@@ -11,3 +11,4 @@ djangorestframework-simplejwt>=5.3,<5.4
 django-filter>=24.2,<24.3
 django-taggit>=6.1,<7
 django-quill-editor>=0.1,<1
+django-jazzmin>=2.6,<4

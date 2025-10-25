@@ -1,7 +1,7 @@
-п»ї"use client";
+"use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 
 import type { ProductReview } from "@/types/product";
@@ -35,38 +35,6 @@ const initialFormState: ReviewFormState = {
   authorName: "",
 };
 
-// ?????? ????????? ???????? (1..5)
-function StarRating({
-  value,
-  onChange,
-  disabled = false,
-}: {
-  value: number;
-  onChange: (next: number) => void;
-  disabled?: boolean;
-}) {
-  const [hover, setHover] = useState<number | null>(null);
-  const current = hover ?? value;
-
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (disabled) return;
-    if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); onChange(Math.min(5, value + 1)); }
-    if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); onChange(Math.max(1, value - 1)); }
-    if (e.key === "Home") { e.preventDefault(); onChange(1); }
-    if (e.key === "End") { e.preventDefault(); onChange(5); }
-  };
-
-  return (
-    <div className="rating-stars" role="slider" aria-valuemin={1} aria-valuemax={5} aria-valuenow={value} tabIndex={disabled ? -1 : 0} onKeyDown={onKeyDown} onMouseLeave={() => setHover(null)}>
-      {[1,2,3,4,5].map((n) => (
-        <button key={n} type="button" className={`rating-star ${current >= n ? "is-filled" : ""}`} aria-label={`${n} ?? 5`} disabled={disabled} onMouseEnter={() => setHover(n)} onFocus={() => setHover(n)} onClick={() => onChange(n)}>?</button>
-      ))}
-      <span className="rating-value">{current} / 5</span>
-    </div>
-  );
-}
-
-
 function formatDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -82,11 +50,11 @@ function formatDate(value: string): string {
 function moderationLabel(status: ProductReview["moderation_status"]): string {
   switch (status) {
     case "approved":
-      return "РћРґРѕР±СЂРµРЅ";
+      return "Одобрен";
     case "pending":
-      return "РќР° РјРѕРґРµСЂР°С†РёРё";
+      return "На модерации";
     case "rejected":
-      return "РћС‚РєР»РѕРЅС‘РЅ";
+      return "Отклонён";
     default:
       return status;
   }
@@ -150,7 +118,7 @@ export function ProductReviews({
         setNextPage(next);
         setTotalCount(count);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РѕС‚Р·С‹РІС‹.");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить отзывы.");
       } finally {
         setLoading(false);
       }
@@ -205,7 +173,7 @@ export function ProductReviews({
         setForm({ ...initialFormState });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РѕС‚Р·С‹РІ.");
+      setError(err instanceof Error ? err.message : "Не удалось сохранить отзыв.");
     } finally {
       setSubmitting(false);
     }
@@ -223,7 +191,7 @@ export function ProductReviews({
   };
 
   const handleDelete = async (reviewId: number) => {
-    if (!confirm("РЈРґР°Р»РёС‚СЊ РѕС‚Р·С‹РІ?")) {
+    if (!confirm("Удалить отзыв?")) {
       return;
     }
     setSubmitting(true);
@@ -235,7 +203,7 @@ export function ProductReviews({
       setFormVisible(false);
       setEditingReview(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ РѕС‚Р·С‹РІ.");
+      setError(err instanceof Error ? err.message : "Не удалось удалить отзыв.");
     } finally {
       setSubmitting(false);
     }
@@ -253,11 +221,11 @@ export function ProductReviews({
   return (
     <section className="product-reviews">
       <header className="product-reviews__header">
-        <h2>РћС‚Р·С‹РІС‹</h2>
+        <h2>Отзывы</h2>
         <p className="product-reviews__summary">
           {approvedCount > 0
-            ? `РЎСЂРµРґРЅСЏСЏ РѕС†РµРЅРєР° ${derivedAverage?.toFixed(1) ?? "вЂ”"} в… В· РћРґРѕР±СЂРµРЅРЅС‹С… РѕС‚Р·С‹РІРѕРІ: ${approvedCount}`
-            : "РџРѕРєР° РЅРµС‚ РѕРґРѕР±СЂРµРЅРЅС‹С… РѕС‚Р·С‹РІРѕРІ"}
+            ? `Средняя оценка ${derivedAverage?.toFixed(1) ?? "—"} ? · Одобренных отзывов: ${approvedCount}`
+            : "Пока нет одобренных отзывов"}
         </p>
       </header>
 
@@ -265,7 +233,7 @@ export function ProductReviews({
 
       {canSubmitReview && !formVisible && (
         <button className="btn btn-primary" onClick={() => setFormVisible(true)}>
-          РќР°РїРёСЃР°С‚СЊ РѕС‚Р·С‹РІ
+          Написать отзыв
         </button>
       )}
 
@@ -281,17 +249,21 @@ export function ProductReviews({
 
       {formVisible && (
         <div className="product-reviews__form">
-          <h3>{editingReview ? "РР·РјРµРЅРёС‚СЊ РѕС‚Р·С‹РІ" : "РќРѕРІС‹Р№ РѕС‚Р·С‹РІ"}</h3>
+          <h3>{editingReview ? "Изменить отзыв" : "Новый отзыв"}</h3>
           <div className="form-grid">
             <label>
-              <span>РћС†РµРЅРєР°</span>
-              
-              <StarRating
+              <span>Оценка</span>
+              <select
                 value={form.rating}
+                onChange={(event) => setForm((prev) => ({ ...prev, rating: Number(event.target.value) }))}
                 disabled={submitting}
-                onChange={(next) => setForm((prev) => ({ ...prev, rating: next }))}
-              />
-
+              >
+                {[5, 4, 3, 2, 1].map((value) => (
+                  <option key={value} value={value}>
+                    {value} ?
+                  </option>
+                ))}
+              </select>
             </label>
             {!isAuthenticated && (
               <label>
@@ -308,37 +280,37 @@ export function ProductReviews({
             )}
 
             <label>
-              <span>Р—Р°РіРѕР»РѕРІРѕРє</span>
+              <span>Заголовок</span>
               <input
                 type="text"
                 value={form.title}
                 onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
-                placeholder="РљРѕСЂРѕС‚РєРѕ Рѕ РІРїРµС‡Р°С‚Р»РµРЅРёРё"
+                placeholder="Коротко о впечатлении"
                 disabled={submitting}
                 maxLength={120}
               />
             </label>
             <label className="form-grid__full">
-              <span>РћС‚Р·С‹РІ</span>
+              <span>Отзыв</span>
               <textarea
                 value={form.body}
                 onChange={(event) => setForm((prev) => ({ ...prev, body: event.target.value }))}
                 rows={4}
-                placeholder="РџРѕРґРµР»РёС‚РµСЃСЊ РѕРїС‹С‚РѕРј РїРѕРєСѓРїРєРё Рё РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ"
+                placeholder="Поделитесь опытом покупки и использования"
                 disabled={submitting}
               />
             </label>
           </div>
           <div className="product-reviews__form-actions">
             <button className="btn btn-primary" onClick={handleCreateOrUpdate} disabled={submitting || !form.body.trim()}>
-              {submitting ? "РЎРѕС…СЂР°РЅСЏРµРј..." : "РћС‚РїСЂР°РІРёС‚СЊ"}
+              {submitting ? "Сохраняем..." : "Отправить"}
             </button>
             <button className="btn btn-secondary" type="button" onClick={resetForm} disabled={submitting}>
-              РћС‚РјРµРЅР°
+              Отмена
             </button>
           </div>
           <p className="product-reviews__note">
-            РћС‚РїСЂР°РІР»РµРЅРЅС‹Р№ РѕС‚Р·С‹РІ РїРѕРїР°РґС‘С‚ РЅР° РјРѕРґРµСЂР°С†РёСЋ. Рћ РїСѓР±Р»РёРєР°С†РёРё РјС‹ СЃРѕРѕР±С‰РёРј РїРёСЃСЊРјРѕРј.
+            Отправленный отзыв попадёт на модерацию. О публикации мы сообщим письмом.
           </p>
         </div>
       )}
@@ -348,11 +320,11 @@ export function ProductReviews({
           <li key={review.id} className="product-review-card">
             <div className="product-review-card__header">
               <strong>{review.user?.name ?? "\u0413\u043e\u0441\u0442\u044c"}</strong>
-              <span className="product-review-card__rating">{`${review.rating} в…`}</span>
+              <span className="product-review-card__rating">{`${review.rating} ?`}</span>
             </div>
             <div className="product-review-card__meta">
               <span>{formatDate(review.created_at)}</span>
-              {review.verified_purchase && <span className="tag">РџСЂРѕРІРµСЂРµРЅРЅР°СЏ РїРѕРєСѓРїРєР°</span>}
+              {review.verified_purchase && <span className="tag">Проверенная покупка</span>}
               <span className={`tag tag--${review.moderation_status}`}>{moderationLabel(review.moderation_status)}</span>
             </div>
             {review.title && <h4 className="product-review-card__title">{review.title}</h4>}
@@ -360,10 +332,10 @@ export function ProductReviews({
             {review.is_owner && (
               <div className="product-review-card__actions">
                 <button className="btn btn-secondary" onClick={() => handleEdit(review)} disabled={submitting}>
-                  Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ
+                  Редактировать
                 </button>
                 <button className="btn btn-outline" onClick={() => handleDelete(review.id)} disabled={submitting}>
-                  РЈРґР°Р»РёС‚СЊ
+                  Удалить
                 </button>
               </div>
             )}
@@ -373,14 +345,13 @@ export function ProductReviews({
 
       {hasMore && (
         <button className="btn btn-secondary" onClick={handleLoadMore} disabled={loading}>
-          {loading ? "Р—Р°РіСЂСѓР¶Р°РµРј..." : "РџРѕРєР°Р·Р°С‚СЊ РµС‰С‘"}
+          {loading ? "Загружаем..." : "Показать ещё"}
         </button>
       )}
 
       {!loading && reviews.length === 0 && (
-        <p className="product-reviews__empty">Р‘СѓРґСЊС‚Рµ РїРµСЂРІС‹Рј, РєС‚Рѕ РїРѕРґРµР»РёС‚СЃСЏ РІРїРµС‡Р°С‚Р»РµРЅРёРµРј Рѕ С‚РѕРІР°СЂРµ.</p>
+        <p className="product-reviews__empty">Будьте первым, кто поделится впечатлением о товаре.</p>
       )}
     </section>
   );
 }
-

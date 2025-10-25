@@ -31,6 +31,7 @@ ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts.split(",") if host.stri
 
 
 INSTALLED_APPS = [
+    "jazzmin",  # Must be before django.contrib.admin
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "core.middleware.AdminEnglishMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -195,3 +197,71 @@ EMAIL_HOST_PASSWORD = os.getenv("DJANGO_EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = getenv_bool("DJANGO_EMAIL_USE_TLS", True)
 FRONTEND_PASSWORD_RESET_URL = os.getenv("FRONTEND_PASSWORD_RESET_URL", "http://localhost:3000/reset-password")
 
+# Jazzmin configuration
+JAZZMIN_SETTINGS = {
+    "site_title": "Shopster Admin",
+    "site_header": "Shopster Admin",
+    "site_brand": "Shopster",
+    "welcome_sign": "Welcome to Shopster Admin",
+    "copyright": "Shopster",
+    # Layout & navigation
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+    "order_with_respect_to": [
+        "shop",
+        "auth",
+        "content",
+        "taggit",
+    ],
+    # Top menu entries
+    "topmenu_links": [
+        {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"app": "shop", "name": "Catalog"},
+        {"model": "auth.User", "name": "Users"},
+        {"name": "Site", "url": "/", "new_window": True},
+    ],
+    # Per-app/model icons
+    "icons": {
+        "auth.user": "fas fa-user",
+        "auth.group": "fas fa-users",
+        "shop": "fas fa-store",
+        "shop.category": "fas fa-layer-group",
+        "shop.product": "fas fa-box",
+        "shop.productimage": "far fa-image",
+        "shop.cart": "fas fa-shopping-cart",
+        "shop.cartitem": "fas fa-list",
+        "shop.order": "fas fa-receipt",
+        "shop.orderitem": "fas fa-list-ul",
+        "shop.productreview": "fas fa-star",
+        "content": "fas fa-file-alt",
+    },
+    # Change form layout and related modals
+    "related_modal_active": True,
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_Overrides": {
+        "shop.product": "collapsible",
+        "shop.order": "horizontal_tabs",
+    },
+    # Useful quick links in user menu
+    "usermenu_links": [
+        {"name": "View site", "url": "/", "icon": "fas fa-globe", "new_window": True},
+        {"model": "auth.user"},
+    ],
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "minty",            # stronger visual difference
+    "dark_mode_theme": "darkly",
+    "navbar": "navbar-primary",
+    "footer_fixed": True,
+    "actions_sticky_top": True,
+    "body_small_text": False,
+    "brand_colour": "navbar-primary",
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-outline-secondary",
+        "danger": "btn-danger",
+        "info": "btn-info",
+    },
+}

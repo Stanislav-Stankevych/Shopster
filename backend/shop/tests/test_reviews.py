@@ -80,7 +80,7 @@ class ProductReviewAPITests(APITestCase):
         self.assertTrue(review.verified_purchase)
         self.assertEqual(review.moderation_status, ProductReview.ModerationStatus.PENDING)
 
-    def test_user_without_purchase_cannot_create_review(self):
+    def test_user_without_purchase_can_create_review(self):
         self.client.force_authenticate(self.other_user)
         response = self.client.post(
             reverse("review-list"),
@@ -92,8 +92,31 @@ class ProductReviewAPITests(APITestCase):
             },
             format="json",
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(ProductReview.objects.with_unapproved().count(), 0)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        review = ProductReview.objects.with_unapproved().get()
+        self.assertFalse(review.verified_purchase)
+        self.assertEqual(review.user, self.other_user)
+        self.assertEqual(review.author_name, self.other_user.get_username())
+
+    def test_anonymous_user_can_create_review(self):
+        response = self.client.post(
+            reverse("review-list"),
+            {
+                "product_id": self.product.id,
+                "rating": 5,
+                "body": "Гость делится впечатлением",
+                "author_name": "Свободный гость",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        review = ProductReview.objects.with_unapproved().get()
+        self.assertIsNone(review.user)
+        self.assertEqual(review.author_name, "Свободный гость")
+        self.assertFalse(review.verified_purchase)
+        self.assertEqual(review.moderation_status, ProductReview.ModerationStatus.PENDING)
+        self.assertIsNone(response.data["user"]["id"])
+        self.assertEqual(response.data["user"]["name"], "Свободный гость")
 
     def test_pending_review_visible_only_to_author(self):
         self.client.force_authenticate(self.user)

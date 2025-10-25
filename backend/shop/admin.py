@@ -5,20 +5,39 @@ from django.utils.translation import gettext_lazy as _
 from .models import Cart, CartItem, Category, Order, OrderItem, Product, ProductImage, ProductReview
 
 
+# Admin branding
+admin.site.site_header = "Shopster Admin"
+admin.site.site_title = "Shopster Admin"
+admin.site.index_title = "Administration"
+
+ORDER_STATUS_LABELS = {
+    Order.Status.DRAFT: "Draft",
+    Order.Status.PENDING: "Pending",
+    Order.Status.PAID: "Paid",
+    Order.Status.SHIPPED: "Shipped",
+    Order.Status.COMPLETED: "Completed",
+    Order.Status.CANCELLED: "Cancelled",
+}
+
+ORDER_PAYMENT_STATUS_LABELS = {
+    Order.PaymentStatus.PENDING: "Payment pending",
+    Order.PaymentStatus.PAID: "Paid",
+    Order.PaymentStatus.REFUNDED: "Refunded",
+}
+
+REVIEW_MODERATION_STATUS_LABELS = {
+    ProductReview.ModerationStatus.PENDING: "Pending review",
+    ProductReview.ModerationStatus.APPROVED: "Approved",
+    ProductReview.ModerationStatus.REJECTED: "Rejected",
+}
+
+
 class OrderStatusFilter(admin.SimpleListFilter):
     title = _("Status")
     parameter_name = "status"
-    _labels = {
-        Order.Status.DRAFT: "Черновик",
-        Order.Status.PENDING: "В ожидании",
-        Order.Status.PAID: "Оплачен",
-        Order.Status.SHIPPED: "Отгружен",
-        Order.Status.COMPLETED: "Завершён",
-        Order.Status.CANCELLED: "Отменён",
-    }
 
     def lookups(self, request, model_admin):
-        return [(choice, label) for choice, label in self._labels.items()]
+        return list(ORDER_STATUS_LABELS.items())
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -30,14 +49,9 @@ class OrderStatusFilter(admin.SimpleListFilter):
 class OrderPaymentStatusFilter(admin.SimpleListFilter):
     title = _("Payment status")
     parameter_name = "payment_status"
-    _labels = {
-        Order.PaymentStatus.PENDING: "Ожидает оплаты",
-        Order.PaymentStatus.PAID: "Оплачен",
-        Order.PaymentStatus.REFUNDED: "Возврат",
-    }
 
     def lookups(self, request, model_admin):
-        return [(choice, label) for choice, label in self._labels.items()]
+        return list(ORDER_PAYMENT_STATUS_LABELS.items())
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -49,14 +63,9 @@ class OrderPaymentStatusFilter(admin.SimpleListFilter):
 class ReviewStatusFilter(admin.SimpleListFilter):
     title = _("Moderation status")
     parameter_name = "moderation_status"
-    _labels = {
-        ProductReview.ModerationStatus.PENDING: "На модерации",
-        ProductReview.ModerationStatus.APPROVED: "Одобрен",
-        ProductReview.ModerationStatus.REJECTED: "Отклонён",
-    }
 
     def lookups(self, request, model_admin):
-        return [(choice, label) for choice, label in self._labels.items()]
+        return list(REVIEW_MODERATION_STATUS_LABELS.items())
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -195,24 +204,11 @@ class OrderAdmin(SoftDeleteAdmin):
 
     @admin.display(description="Status")
     def display_status(self, obj: Order):
-        mapping = {
-            Order.Status.DRAFT: "Черновик",
-            Order.Status.PENDING: "В ожидании",
-            Order.Status.PAID: "Оплачен",
-            Order.Status.SHIPPED: "Отгружен",
-            Order.Status.COMPLETED: "Завершён",
-            Order.Status.CANCELLED: "Отменён",
-        }
-        return mapping.get(obj.status, obj.status)
+        return ORDER_STATUS_LABELS.get(obj.status, obj.status)
 
     @admin.display(description="Payment status")
     def display_payment_status(self, obj: Order):
-        mapping = {
-            Order.PaymentStatus.PENDING: "Ожидает оплаты",
-            Order.PaymentStatus.PAID: "Оплачен",
-            Order.PaymentStatus.REFUNDED: "Возврат",
-        }
-        return mapping.get(obj.payment_status, obj.payment_status)
+        return ORDER_PAYMENT_STATUS_LABELS.get(obj.payment_status, obj.payment_status)
 
 
 admin.site.register(ProductImage)
@@ -225,6 +221,7 @@ class ProductReviewAdmin(SoftDeleteAdmin):
     list_display = (
         "id",
         "product",
+        "display_author",
         "user",
         "rating",
         "display_moderation_status",
@@ -233,7 +230,7 @@ class ProductReviewAdmin(SoftDeleteAdmin):
         "created_at",
     )
     list_filter = (ReviewStatusFilter, "verified_purchase", DeletedStatusFilter, "rating")
-    search_fields = ("product__name", "user__email", "title", "body")
+    search_fields = ("product__name", "user__email", "user__username", "author_name", "title", "body")
     readonly_fields = ("created_at", "updated_at", "moderated_at", "moderated_by", "deleted_at")
     actions = SoftDeleteAdmin.actions + ["approve_reviews", "reject_reviews"]
 
@@ -259,9 +256,11 @@ class ProductReviewAdmin(SoftDeleteAdmin):
 
     @admin.display(description="Moderation status")
     def display_moderation_status(self, obj: ProductReview):
-        mapping = {
-            ProductReview.ModerationStatus.PENDING: "На модерации",
-            ProductReview.ModerationStatus.APPROVED: "Одобрен",
-            ProductReview.ModerationStatus.REJECTED: "Отклонён",
-        }
-        return mapping.get(obj.moderation_status, obj.moderation_status)
+        return REVIEW_MODERATION_STATUS_LABELS.get(obj.moderation_status, obj.moderation_status)
+
+    @admin.display(description=_("Author"))
+    def display_author(self, obj: ProductReview):
+        if obj.user_id and obj.user:
+            name = obj.user.get_full_name().strip() or obj.user.get_username()
+            return name
+        return (obj.author_name or "").strip() or _("Guest")

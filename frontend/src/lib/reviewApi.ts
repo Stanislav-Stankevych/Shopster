@@ -67,15 +67,17 @@ type ReviewPayload = {
   rating: number;
   title?: string;
   body: string;
+  author_name?: string;
 };
 
-export async function createProductReview(payload: ReviewPayload): Promise<ProductReview> {
+export async function createProductReview(payload: ReviewPayload, accessToken?: string): Promise<ProductReview> {
   const url = new URL("/api/reviews/", API_BASE);
   const response = await fetch(url.toString(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     credentials: "include",
     body: JSON.stringify(payload),
@@ -85,7 +87,8 @@ export async function createProductReview(payload: ReviewPayload): Promise<Produ
 
 export async function updateProductReview(
   reviewId: number,
-  payload: Partial<Omit<ReviewPayload, "product_id">>
+  payload: Partial<Omit<ReviewPayload, "product_id">>,
+  accessToken?: string
 ): Promise<ProductReview> {
   const url = new URL(`/api/reviews/${reviewId}/`, API_BASE);
   const response = await fetch(url.toString(), {
@@ -93,6 +96,7 @@ export async function updateProductReview(
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     credentials: "include",
     body: JSON.stringify(payload),
@@ -100,10 +104,13 @@ export async function updateProductReview(
   return handleResponse<ProductReview>(response);
 }
 
-export async function deleteProductReview(reviewId: number): Promise<void> {
+export async function deleteProductReview(reviewId: number, accessToken?: string): Promise<void> {
   const url = new URL(`/api/reviews/${reviewId}/`, API_BASE);
   const response = await fetch(url.toString(), {
     method: "DELETE",
+    headers: {
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
     credentials: "include",
   });
   if (!response.ok) {

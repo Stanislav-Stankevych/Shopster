@@ -130,7 +130,7 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == "create":
-            return [IsAuthenticated()]
+            return [AllowAny()]
         if self.action in {"update", "partial_update", "destroy"}:
             return [IsAuthenticated(), IsReviewAuthorOrStaff()]
         if self.action == "moderate":
@@ -160,13 +160,20 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         product = serializer.validated_data["product"]
-        user = self.request.user
-        if not user_has_verified_purchase(user, product):
-            raise serializers.ValidationError({"detail": "You can only leave a review after purchasing this product."})
+        user = self.request.user if self.request.user.is_authenticated else None
+        raw_author_name = serializer.validated_data.get("author_name", "") or ""
+        author_name = raw_author_name.strip()
+        if user:
+            default_name = user.get_full_name().strip() or user.get_username()
+            if not author_name:
+                author_name = default_name
+        if not author_name:
+            author_name = "\u0413\u043e\u0441\u0442\u044c"
         try:
             serializer.save(
                 user=user,
-                verified_purchase=True,
+                author_name=author_name,
+                verified_purchase=user_has_verified_purchase(user, product) if user else False,
                 moderation_status=ProductReview.ModerationStatus.PENDING,
             )
         except IntegrityError as exc:

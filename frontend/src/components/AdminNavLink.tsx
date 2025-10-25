@@ -13,7 +13,7 @@ export function AdminNavLink() {
   return (
     <>
       <Link href="/admin/stats">Admin dashboard</Link>
-      <a href="http://localhost:8000/admin/" target="_blank" rel="noreferrer noopener">
+      <a href="http://localhost:3000admin/" target="_blank" rel="noreferrer noopener">
         Django admin
       </a>
     </>

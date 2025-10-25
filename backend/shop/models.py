@@ -210,7 +210,7 @@ class CartItem(models.Model):
 
 
 class Order(SoftDeleteModel):
-        class Status(models.TextChoices):
+    class Status(models.TextChoices):
         DRAFT = "draft", "Черновик"
         PENDING = "pending", "В ожидании"
         PAID = "paid", "Оплачен"
@@ -222,7 +222,6 @@ class Order(SoftDeleteModel):
         PENDING = "pending", "Ожидает оплаты"
         PAID = "paid", "Оплачен"
         REFUNDED = "refunded", "Возврат"
-
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="orders",
@@ -368,10 +367,13 @@ class ProductReview(SoftDeleteModel):
         settings.AUTH_USER_MODEL,
         related_name="product_reviews",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     rating = models.PositiveSmallIntegerField()
     title = models.CharField(max_length=255, blank=True)
     body = models.TextField()
+    author_name = models.CharField(max_length=255, blank=True)
     verified_purchase = models.BooleanField(default=False)
     moderation_status = models.CharField(
         max_length=20,
@@ -398,7 +400,7 @@ class ProductReview(SoftDeleteModel):
         constraints = [
             models.UniqueConstraint(
                 fields=("product", "user"),
-                condition=models.Q(deleted_at__isnull=True),
+                condition=models.Q(deleted_at__isnull=True, user__isnull=False),
                 name="unique_active_product_review",
             ),
             models.CheckConstraint(
@@ -410,7 +412,11 @@ class ProductReview(SoftDeleteModel):
         verbose_name_plural = "Отзывы о товарах"
 
     def __str__(self) -> str:
-        return f"{self.product} review by {self.user}"
+        if self.user_id and self.user:
+            name = self.user.get_full_name().strip() or self.user.get_username()
+        else:
+            name = (self.author_name or "").strip() or "Anonymous"
+        return f"{self.product} review by {name}"
 
     def mark_moderated(self, *, status: str, moderator, note: str = "") -> None:
         if status not in self.ModerationStatus.values:

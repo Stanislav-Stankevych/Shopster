@@ -52,6 +52,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         queryset=Product.objects.filter(is_active=True),
         write_only=True,
     )
+    author_name = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=255)
     user = serializers.SerializerMethodField()
     is_owner = serializers.SerializerMethodField()
 
@@ -64,6 +65,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             "rating",
             "title",
             "body",
+            "author_name",
             "verified_purchase",
             "moderation_status",
             "moderation_note",
@@ -92,13 +94,17 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             "name": obj.product.name,
         }
 
-    def get_user(self, obj: ProductReview) -> dict[str, str | int]:
-        name = obj.user.get_full_name().strip()
-        if not name:
-            name = obj.user.get_username()
+    def get_user(self, obj: ProductReview) -> dict[str, str | int | None]:
+        if obj.user_id and obj.user:
+            name = obj.user.get_full_name().strip() or obj.user.get_username()
+            return {
+                "id": obj.user_id,
+                "name": name,
+            }
+        display_name = (obj.author_name or "").strip() or "\u0413\u043e\u0441\u0442\u044c"
         return {
-            "id": obj.user_id,
-            "name": name,
+            "id": None,
+            "name": display_name,
         }
 
     def get_is_owner(self, obj: ProductReview) -> bool:
@@ -178,15 +184,16 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_can_review(self, obj: Product) -> bool:
         request = self.context.get("request")
-        if not request or not request.user.is_authenticated:
+        if not request:
             return False
-        if ProductReview.objects.with_unapproved().filter(
+        user = request.user if request.user.is_authenticated else None
+        if user and ProductReview.objects.with_unapproved().filter(
             product=obj,
-            user=request.user,
+            user=user,
             deleted_at__isnull=True,
         ).exists():
             return False
-        return user_has_verified_purchase(request.user, obj)
+        return True
 
     def get_user_review(self, obj: Product):
         request = self.context.get("request")

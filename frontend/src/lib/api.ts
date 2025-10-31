@@ -33,7 +33,10 @@ function parsePageNumber(value: unknown): number | null {
   }
 }
 
-async function fetchPaginatedCollection<T>(endpoint: string, params: PaginationParams = {}): Promise<PaginatedResult<T>> {
+async function fetchPaginatedCollection<T>(
+  endpoint: string,
+  params: PaginationParams = {},
+): Promise<PaginatedResult<T>> {
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? 12;
   const url = new URL(endpoint, API_BASE);
@@ -48,10 +51,12 @@ async function fetchPaginatedCollection<T>(endpoint: string, params: PaginationP
     }
   }
 
-  const shouldBypassCache = params.query && Object.values(params.query).some((value) => value !== undefined && value !== "");
+  const shouldBypassCache =
+    params.query &&
+    Object.values(params.query).some((value) => value !== undefined && value !== "");
   const response = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
-    ...(shouldBypassCache ? { cache: "no-store" as const } : { next: { revalidate: 60 } })
+    ...(shouldBypassCache ? { cache: "no-store" as const } : { next: { revalidate: 60 } }),
   });
 
   if (!response.ok) {
@@ -71,7 +76,9 @@ async function fetchPaginatedCollection<T>(endpoint: string, params: PaginationP
 
 type FetchProductsPageOptions = PaginationParams;
 
-export async function fetchProductsPage(options: FetchProductsPageOptions = {}): Promise<PaginatedResult<Product>> {
+export async function fetchProductsPage(
+  options: FetchProductsPageOptions = {},
+): Promise<PaginatedResult<Product>> {
   try {
     return await fetchPaginatedCollection<Product>("/api/products/", options);
   } catch (error) {
@@ -106,7 +113,7 @@ export async function fetchCategories(): Promise<CategorySummary[]> {
 
   const response = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
-    next: { revalidate: 300 }
+    next: { revalidate: 300 },
   });
 
   if (!response.ok) {
@@ -128,7 +135,9 @@ export async function fetchCategories(): Promise<CategorySummary[]> {
     }));
 }
 
-export async function fetchPosts(options: PaginationParams = {}): Promise<PaginatedResult<PostSummary>> {
+export async function fetchPosts(
+  options: PaginationParams = {},
+): Promise<PaginatedResult<PostSummary>> {
   return fetchPaginatedCollection<PostSummary>("/api/content/posts/", options);
 }
 
@@ -146,5 +155,3 @@ export async function fetchPost(slug: string): Promise<PostDetail | null> {
   const data = await response.json();
   return data as PostDetail;
 }
-
-

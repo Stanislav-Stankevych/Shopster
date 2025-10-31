@@ -91,7 +91,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <h1>Catalog</h1>
             {searchTerm ? (
               <p>
-                Showing results for <strong>{searchTerm}</strong>. Adjust filters to refine the list.
+                Showing results for <strong>{searchTerm}</strong>. Adjust filters to refine the
+                list.
               </p>
             ) : (
               <p>Products are synced from Django. Use search and filters to navigate quickly.</p>
@@ -110,4 +111,3 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     </section>
   );
 }
-

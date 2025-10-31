@@ -9,9 +9,7 @@ type ReviewsResponse = {
   count: number;
 };
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 function parseNextPage(next: string | null): number | null {
   if (!next) {
@@ -39,7 +37,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 export async function fetchProductReviews(
   productSlug: string,
-  page = 1
+  page = 1,
 ): Promise<{
   reviews: ProductReview[];
   nextPage: number | null;
@@ -70,7 +68,10 @@ type ReviewPayload = {
   author_name?: string;
 };
 
-export async function createProductReview(payload: ReviewPayload, accessToken?: string): Promise<ProductReview> {
+export async function createProductReview(
+  payload: ReviewPayload,
+  accessToken?: string,
+): Promise<ProductReview> {
   const url = new URL("/api/reviews/", API_BASE);
   const response = await fetch(url.toString(), {
     method: "POST",
@@ -88,7 +89,7 @@ export async function createProductReview(payload: ReviewPayload, accessToken?: 
 export async function updateProductReview(
   reviewId: number,
   payload: Partial<Omit<ReviewPayload, "product_id">>,
-  accessToken?: string
+  accessToken?: string,
 ): Promise<ProductReview> {
   const url = new URL(`/api/reviews/${reviewId}/`, API_BASE);
   const response = await fetch(url.toString(), {

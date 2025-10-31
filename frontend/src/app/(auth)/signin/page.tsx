@@ -40,11 +40,19 @@ export default function SignInPage() {
     <section className="section">
       <div className="container auth-card">
         <h1>Sign in</h1>
-        <p className="auth-subtitle">Use the email (or username) and password specified during registration.</p>
+        <p className="auth-subtitle">
+          Use the email (or username) and password specified during registration.
+        </p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
             <span>Email or username</span>
-            <input name="identifier" type="text" placeholder="user@example.com" required minLength={2} />
+            <input
+              name="identifier"
+              type="text"
+              placeholder="user@example.com"
+              required
+              minLength={2}
+            />
           </label>
           <label className="auth-field">
             <span>Password</span>
@@ -65,4 +73,3 @@ export default function SignInPage() {
     </section>
   );
 }
-

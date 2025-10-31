@@ -46,7 +46,9 @@ export default function SignUpPage() {
           const data = await response.json().catch(() => ({}));
           const message =
             typeof data === "object" && data
-              ? Object.values(data as Record<string, string[]>).flat().join(" ")
+              ? Object.values(data as Record<string, string[]>)
+                  .flat()
+                  .join(" ")
               : "Could not create account.";
           setError(message || "Could not create account.");
           return;
@@ -102,7 +104,13 @@ export default function SignUpPage() {
           </label>
           <label className="auth-field">
             <span>Confirm password</span>
-            <input name="password_confirm" type="password" placeholder="••••••••" required minLength={6} />
+            <input
+              name="password_confirm"
+              type="password"
+              placeholder="••••••••"
+              required
+              minLength={6}
+            />
           </label>
           {error && <p className="auth-error">{error}</p>}
           <button className="btn btn-primary auth-submit" type="submit" disabled={isPending}>
@@ -116,4 +124,3 @@ export default function SignUpPage() {
     </section>
   );
 }
-

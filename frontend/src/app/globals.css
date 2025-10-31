@@ -151,7 +151,9 @@ a {
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .btn-primary {
@@ -659,7 +661,6 @@ a {
   font-weight: 600;
 }
 
-
 .profile-form {
   margin-top: 2rem;
   display: flex;
@@ -957,13 +958,11 @@ a {
   }
 }
 
-
 .product-keywords {
   margin-top: 1rem;
   color: var(--muted);
   font-size: 0.9rem;
 }
-
 
 .blog-container {
   display: flex;
@@ -1129,7 +1128,9 @@ a {
   padding: 0.7rem 0.9rem;
   line-height: 1.4;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .product-reviews input[type="text"]::placeholder,
@@ -1273,4 +1274,3 @@ a {
     flex-direction: column;
   }
 }
-

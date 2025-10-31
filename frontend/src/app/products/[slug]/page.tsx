@@ -32,7 +32,11 @@ async function loadProduct(slug: string) {
   return product;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
   const product = await fetchProduct(slug);
   if (!product) {
@@ -43,7 +47,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   const title = product.meta_title || product.name;
-  const description = product.meta_description || product.short_description || product.description || SITE_NAME;
+  const description =
+    product.meta_description || product.short_description || product.description || SITE_NAME;
   const canonical = absoluteUrl(`/products/${product.slug}`);
   const mainImage = product.images.find((image) => image.is_main) ?? product.images[0];
   const ogImage = buildImageUrl(mainImage?.image) ?? DEFAULT_OG_IMAGE;
@@ -88,19 +93,27 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       <section className="section">
         <div className="container hero-grid">
           <div className="hero-card">
-            <Link href="/products" className="btn btn-outline" style={{ marginBottom: "1.5rem", width: "fit-content" }}>
+            <Link
+              href="/products"
+              className="btn btn-outline"
+              style={{ marginBottom: "1.5rem", width: "fit-content" }}
+            >
               Back to catalog
             </Link>
             <h1>{product.meta_title || product.name}</h1>
             <p className="lead">{description}</p>
             <div className="cta-buttons">
-              <span className="btn price-badge">{formatCurrency(product.currency ?? "RUB", Number(product.price))}</span>
+              <span className="btn price-badge">
+                {formatCurrency(product.currency ?? "RUB", Number(product.price))}
+              </span>
               <AddToCartButton productId={product.id} />
               <span className="btn btn-outline">In stock: {product.stock}</span>
             </div>
             <p>SKU: {product.sku}</p>
             {product.category && <p>Category: {product.category.name}</p>}
-            {product.meta_keywords && <p className="product-keywords">Keywords: {product.meta_keywords}</p>}
+            {product.meta_keywords && (
+              <p className="product-keywords">Keywords: {product.meta_keywords}</p>
+            )}
           </div>
           <div className="hero-card" style={{ padding: 0, overflow: "hidden" }}>
             {imageUrl ? (

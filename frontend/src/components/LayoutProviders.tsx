@@ -43,8 +43,3 @@ export function LayoutProviders({ children }: PropsWithChildren) {
     </AuthSessionProvider>
   );
 }
-
-
-
-
-

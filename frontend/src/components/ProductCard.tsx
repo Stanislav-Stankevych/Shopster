@@ -19,7 +19,10 @@ export function ProductCard({ product }: Props) {
       {mainImage ? (
         <Image
           className="product-image"
-          src={new URL(mainImage.image, process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000").toString()}
+          src={new URL(
+            mainImage.image,
+            process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000",
+          ).toString()}
           alt={mainImage.alt_text || product.name}
           width={640}
           height={420}
@@ -28,7 +31,9 @@ export function ProductCard({ product }: Props) {
         <div className="product-image" />
       )}
       <div className="product-body">
-        <span className="product-price">{formatCurrency(product.currency ?? "RUB", Number(product.price))}</span>
+        <span className="product-price">
+          {formatCurrency(product.currency ?? "RUB", Number(product.price))}
+        </span>
         <h3>{product.name}</h3>
         <p>{product.short_description}</p>
         <div className="product-actions">
@@ -41,4 +46,3 @@ export function ProductCard({ product }: Props) {
     </div>
   );
 }
-

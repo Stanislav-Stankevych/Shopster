@@ -1,5 +1,4 @@
-﻿
-import { AccountProfileForm } from "@/components/AccountProfileForm";
+﻿import { AccountProfileForm } from "@/components/AccountProfileForm";
 import { API_BASE_URL } from "@/lib/config";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -46,7 +45,9 @@ export default async function AccountPage() {
       <section className="section">
         <div className="container auth-card">
           <h1>Account</h1>
-          <p className="auth-subtitle">Update personal details and your default shipping address.</p>
+          <p className="auth-subtitle">
+            Update personal details and your default shipping address.
+          </p>
           <AccountProfileForm initialData={profile} />
         </div>
       </section>
@@ -56,9 +57,3 @@ export default async function AccountPage() {
     redirect("/signin");
   }
 }
-
-
-
-
-
-

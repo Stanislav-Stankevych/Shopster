@@ -1,10 +1,16 @@
-
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
-import { Configure, InstantSearch, SearchBox, useHits, useSearchBox, useInstantSearch } from "react-instantsearch-hooks-web";
+import {
+  Configure,
+  InstantSearch,
+  SearchBox,
+  useHits,
+  useSearchBox,
+  useInstantSearch,
+} from "react-instantsearch-hooks-web";
 import type { Hit } from "instantsearch.js";
 
 import { ALGOLIA_INDEX, getAlgoliaSearchClient } from "@/lib/algolia";
@@ -70,7 +76,10 @@ function SearchDropdown() {
   return (
     <ul className="header-search__dropdown">
       {hits.map((hit) => {
-        const price = hit.price?.toLocaleString("ru-RU", { style: "currency", currency: hit.currency ?? "RUB" });
+        const price = hit.price?.toLocaleString("ru-RU", {
+          style: "currency",
+          currency: hit.currency ?? "RUB",
+        });
         const imageUrl =
           hit.image_url && !hit.image_url.startsWith("http")
             ? `${process.env.NEXT_PUBLIC_API_BASE_URL}${hit.image_url}`
@@ -80,7 +89,13 @@ function SearchDropdown() {
           <li key={hit.objectID}>
             <Link href={`/products/${hit.slug}`}>
               {imageUrl ? (
-                <Image className="header-search__thumb" src={imageUrl} alt={hit.name} width={48} height={48} />
+                <Image
+                  className="header-search__thumb"
+                  src={imageUrl}
+                  alt={hit.name}
+                  width={48}
+                  height={48}
+                />
               ) : (
                 <div className="header-search__thumb placeholder">Нет фото</div>
               )}
@@ -119,4 +134,3 @@ export function AlgoliaSearch() {
     </InstantSearch>
   );
 }
-

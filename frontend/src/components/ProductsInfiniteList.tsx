@@ -122,7 +122,7 @@ export function ProductsInfiniteList({
           }
         });
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
     observer.observe(target);
     return () => observer.disconnect();
@@ -144,7 +144,12 @@ export function ProductsInfiniteList({
         </p>
         {error && <p className="catalog-error">{error}</p>}
         {hasMore && (
-          <button className="btn btn-secondary" type="button" onClick={() => loadMore().catch(() => undefined)} disabled={isLoading}>
+          <button
+            className="btn btn-secondary"
+            type="button"
+            onClick={() => loadMore().catch(() => undefined)}
+            disabled={isLoading}
+          >
             {isLoading ? "Loading..." : "Load more"}
           </button>
         )}
@@ -153,4 +158,3 @@ export function ProductsInfiniteList({
     </>
   );
 }
-

@@ -7,15 +7,17 @@ import { useCartStore } from "@/lib/cartStore";
 import { formatCurrency } from "@/lib/utils";
 
 export default function CartPage() {
-  const { items, subtotal, totalItems, loadCart, updateItem, removeItem, isLoading } = useCartStore((state) => ({
-    items: state.items,
-    subtotal: state.subtotal,
-    totalItems: state.totalItems,
-    loadCart: state.loadCart,
-    updateItem: state.updateItem,
-    removeItem: state.removeItem,
-    isLoading: state.isLoading,
-  }));
+  const { items, subtotal, totalItems, loadCart, updateItem, removeItem, isLoading } = useCartStore(
+    (state) => ({
+      items: state.items,
+      subtotal: state.subtotal,
+      totalItems: state.totalItems,
+      loadCart: state.loadCart,
+      updateItem: state.updateItem,
+      removeItem: state.removeItem,
+      isLoading: state.isLoading,
+    }),
+  );
 
   useEffect(() => {
     loadCart().catch(() => {});
@@ -62,7 +64,11 @@ export default function CartPage() {
                     <button
                       className="cart-item__remove"
                       onClick={async () => {
-                        try { await removeItem(item.id); } catch (err) { console.error(err); }
+                        try {
+                          await removeItem(item.id);
+                        } catch (err) {
+                          console.error(err);
+                        }
                       }}
                     >
                       Remove
@@ -79,11 +85,17 @@ export default function CartPage() {
                         onChange={async (event) => {
                           const value = Number(event.target.value);
                           const qty = Number.isFinite(value) && value > 0 ? Math.floor(value) : 1;
-                          try { await updateItem(item.id, qty); } catch (err) { console.error(err); }
+                          try {
+                            await updateItem(item.id, qty);
+                          } catch (err) {
+                            console.error(err);
+                          }
                         }}
                       />
                     </label>
-                    <span className="cart-item__price">{formatCurrency(currency, item.subtotal)}</span>
+                    <span className="cart-item__price">
+                      {formatCurrency(currency, item.subtotal)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -107,7 +119,3 @@ export default function CartPage() {
     </section>
   );
 }
-
-
-
-

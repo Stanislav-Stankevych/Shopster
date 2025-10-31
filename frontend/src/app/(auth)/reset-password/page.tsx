@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -44,7 +43,9 @@ export default function ResetPasswordPage() {
           const data = await response.json().catch(() => ({}));
           const message =
             typeof data === "object" && data
-              ? Object.values(data as Record<string, string[]>).flat().join(" ")
+              ? Object.values(data as Record<string, string[]>)
+                  .flat()
+                  .join(" ")
               : "Failed to update password.";
           throw new Error(message);
         }
@@ -60,7 +61,9 @@ export default function ResetPasswordPage() {
       <section className="section">
         <div className="container auth-card">
           <h1>Invalid link</h1>
-          <p className="auth-subtitle">Check that you used the latest link from the recovery email.</p>
+          <p className="auth-subtitle">
+            Check that you used the latest link from the recovery email.
+          </p>
           <Link className="btn btn-primary auth-submit" href="/forgot-password">
             Request a new link
           </Link>
@@ -95,7 +98,13 @@ export default function ResetPasswordPage() {
           </label>
           <label className="auth-field">
             <span>Confirm password</span>
-            <input name="password_confirm" type="password" placeholder="••••••••" required minLength={6} />
+            <input
+              name="password_confirm"
+              type="password"
+              placeholder="••••••••"
+              required
+              minLength={6}
+            />
           </label>
           {error && <p className="auth-error">{error}</p>}
           <button className="btn btn-primary auth-submit" type="submit" disabled={isPending}>
@@ -109,4 +118,3 @@ export default function ResetPasswordPage() {
     </section>
   );
 }
-

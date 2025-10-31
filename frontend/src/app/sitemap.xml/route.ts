@@ -55,7 +55,7 @@ export async function GET() {
   ];
 
   const products = await fetchAll<{ slug?: string; updated_at?: string; modified?: string }>(
-    "/api/products/?page_size=100"
+    "/api/products/?page_size=100",
   );
 
   const now = new Date().toISOString();
@@ -74,7 +74,7 @@ export async function GET() {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ...urls.map(
       (entry) =>
-        `<url><loc>${entry.loc}</loc>${entry.lastmod ? `<lastmod>${entry.lastmod}</lastmod>` : ""}</url>`
+        `<url><loc>${entry.loc}</loc>${entry.lastmod ? `<lastmod>${entry.lastmod}</lastmod>` : ""}</url>`,
     ),
     "</urlset>",
   ].join("");

@@ -56,12 +56,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
               <article key={post.slug} className="blog-card">
                 <div className="blog-card__header">
                   <span className="blog-card__date">
-                    {post.published_at ? new Date(post.published_at).toLocaleDateString("ru-RU") : "Draft"}
+                    {post.published_at
+                      ? new Date(post.published_at).toLocaleDateString("ru-RU")
+                      : "Draft"}
                   </span>
                   {post.tags.length > 0 && (
-                    <span className="blog-card__tags">
-                      {post.tags.join(", ")}
-                    </span>
+                    <span className="blog-card__tags">{post.tags.join(", ")}</span>
                   )}
                 </div>
                 <h2>{post.title}</h2>

@@ -19,7 +19,11 @@ function buildImageUrl(imageUrl?: string | null): string | undefined {
   }
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
   const post = await fetchPost(params.slug);
   if (!post) {
     return {
@@ -92,8 +96,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {post.published_at ? new Date(post.published_at).toLocaleDateString("ru-RU") : "Draft"}
           </p>
           <h1>{post.meta_title || post.title}</h1>
-          {post.meta_keywords && <p className="blog-post__keywords">Ключевые слова: {post.meta_keywords}</p>}
-          {post.tags.length > 0 && <p className="blog-post__keywords">Теги: {post.tags.join(", ")}</p>}
+          {post.meta_keywords && (
+            <p className="blog-post__keywords">Ключевые слова: {post.meta_keywords}</p>
+          )}
+          {post.tags.length > 0 && (
+            <p className="blog-post__keywords">Теги: {post.tags.join(", ")}</p>
+          )}
         </div>
         {ogImage && (
           <div className="blog-post__cover">

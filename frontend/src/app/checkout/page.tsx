@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -43,7 +42,9 @@ export default function CheckoutPage() {
   }
 
   const defaultEmail = session.data?.user?.email ?? "";
-  const defaultName = [session.data?.user?.first_name, session.data?.user?.last_name].filter(Boolean).join(" ");
+  const defaultName = [session.data?.user?.first_name, session.data?.user?.last_name]
+    .filter(Boolean)
+    .join(" ");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -97,11 +98,22 @@ export default function CheckoutPage() {
             <div className="auth-field-inline">
               <label className="auth-field">
                 <span>Full name</span>
-                <input name="shipping_full_name" defaultValue={defaultName} placeholder="John Doe" required />
+                <input
+                  name="shipping_full_name"
+                  defaultValue={defaultName}
+                  placeholder="John Doe"
+                  required
+                />
               </label>
               <label className="auth-field">
                 <span>Email</span>
-                <input name="customer_email" type="email" defaultValue={defaultEmail} placeholder="user@example.com" required />
+                <input
+                  name="customer_email"
+                  type="email"
+                  defaultValue={defaultEmail}
+                  placeholder="user@example.com"
+                  required
+                />
               </label>
               <label className="auth-field">
                 <span>Phone</span>
@@ -160,8 +172,9 @@ export default function CheckoutPage() {
               <span>{formatCurrency(currency, subtotal)}</span>
             </div>
             <p className="checkout-summary__hint">
-              A confirmation email will be sent once the order is placed. Guest checkouts receive an additional email with
-              a link to set a password and activate the automatically created account.
+              A confirmation email will be sent once the order is placed. Guest checkouts receive an
+              additional email with a link to set a password and activate the automatically created
+              account.
             </p>
           </aside>
         </div>
@@ -169,4 +182,3 @@ export default function CheckoutPage() {
     </section>
   );
 }
-

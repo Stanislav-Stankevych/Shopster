@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import { useSession } from "next-auth/react";
 import { FormEvent, useState } from "react";
@@ -65,8 +64,10 @@ export function AccountProfileForm({ initialData }: Props) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           typeof errorData === "object" && errorData
-            ? Object.values(errorData as Record<string, string[]>).flat().join(" ")
-            : "Unable to save profile."
+            ? Object.values(errorData as Record<string, string[]>)
+                .flat()
+                .join(" ")
+            : "Unable to save profile.",
         );
       }
       setMessage("Profile updated.");
@@ -104,7 +105,11 @@ export function AccountProfileForm({ initialData }: Props) {
         </label>
         <label className="auth-field">
           <span>City</span>
-          <input name="default_shipping_city" defaultValue={profile.default_shipping_city ?? ""} placeholder="New York" />
+          <input
+            name="default_shipping_city"
+            defaultValue={profile.default_shipping_city ?? ""}
+            placeholder="New York"
+          />
         </label>
         <label className="auth-field">
           <span>Postcode</span>
@@ -131,4 +136,3 @@ export function AccountProfileForm({ initialData }: Props) {
     </form>
   );
 }
-

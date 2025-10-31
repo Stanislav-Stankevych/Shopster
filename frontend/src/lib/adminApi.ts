@@ -29,7 +29,7 @@ type StatsParams = {
 
 export async function fetchStatsOverview(
   accessToken: string,
-  params: StatsParams = {}
+  params: StatsParams = {},
 ): Promise<StatsOverview> {
   const url = new URL("/api/stats/overview/", API_BASE_URL);
   if (params.dateFrom) {

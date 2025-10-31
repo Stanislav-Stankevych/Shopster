@@ -1,5 +1,4 @@
-﻿
-import { Buffer } from "buffer";
+﻿import { Buffer } from "buffer";
 import type { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
@@ -178,4 +177,3 @@ export const authOptions: NextAuthOptions = {
 };
 
 export { API_BASE_URL as BACKEND_URL };
-

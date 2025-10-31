@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -46,8 +45,8 @@ export default function ForgotPasswordPage() {
         <div className="container auth-card">
           <h1>Check your inbox</h1>
           <p className="auth-subtitle">
-            If the address is registered, we have sent instructions for resetting your password. Please check spam if you
-            cannot find the message.
+            If the address is registered, we have sent instructions for resetting your password.
+            Please check spam if you cannot find the message.
           </p>
           <button className="btn btn-primary auth-submit" onClick={() => router.push("/signin")}>
             Back to sign in
@@ -61,7 +60,9 @@ export default function ForgotPasswordPage() {
     <section className="section">
       <div className="container auth-card">
         <h1>Forgot password?</h1>
-        <p className="auth-subtitle">Enter the email you used during registration. We will send a recovery link.</p>
+        <p className="auth-subtitle">
+          Enter the email you used during registration. We will send a recovery link.
+        </p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
             <span>Email</span>
@@ -79,4 +80,3 @@ export default function ForgotPasswordPage() {
     </section>
   );
 }
-

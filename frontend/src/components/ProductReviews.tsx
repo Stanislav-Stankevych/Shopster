@@ -50,22 +50,53 @@ function StarRating({
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (disabled) return;
-    if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); onChange(Math.min(5, value + 1)); }
-    if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); onChange(Math.max(1, value - 1)); }
-    if (e.key === "Home") { e.preventDefault(); onChange(1); }
-    if (e.key === "End") { e.preventDefault(); onChange(5); }
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+      e.preventDefault();
+      onChange(Math.min(5, value + 1));
+    }
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+      e.preventDefault();
+      onChange(Math.max(1, value - 1));
+    }
+    if (e.key === "Home") {
+      e.preventDefault();
+      onChange(1);
+    }
+    if (e.key === "End") {
+      e.preventDefault();
+      onChange(5);
+    }
   };
 
   return (
-    <div className="rating-stars" role="slider" aria-valuemin={1} aria-valuemax={5} aria-valuenow={value} tabIndex={disabled ? -1 : 0} onKeyDown={onKeyDown} onMouseLeave={() => setHover(null)}>
-      {[1,2,3,4,5].map((n) => (
-        <button key={n} type="button" className={`rating-star ${current >= n ? "is-filled" : ""}`} aria-label={`${n} ?? 5`} disabled={disabled} onMouseEnter={() => setHover(n)} onFocus={() => setHover(n)} onClick={() => onChange(n)}>?</button>
+    <div
+      className="rating-stars"
+      role="slider"
+      aria-valuemin={1}
+      aria-valuemax={5}
+      aria-valuenow={value}
+      tabIndex={disabled ? -1 : 0}
+      onKeyDown={onKeyDown}
+      onMouseLeave={() => setHover(null)}
+    >
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          className={`rating-star ${current >= n ? "is-filled" : ""}`}
+          aria-label={`${n} ?? 5`}
+          disabled={disabled}
+          onMouseEnter={() => setHover(n)}
+          onFocus={() => setHover(n)}
+          onClick={() => onChange(n)}
+        >
+          ?
+        </button>
       ))}
       <span className="rating-value">{current} / 5</span>
     </div>
   );
 }
-
 
 function formatDate(value: string): string {
   const date = new Date(value);
@@ -133,7 +164,11 @@ export function ProductReviews({
       setLoading(true);
       setError(null);
       try {
-        const { reviews: fetched, nextPage: next, totalCount: count } = await fetchProductReviews(productSlug, page);
+        const {
+          reviews: fetched,
+          nextPage: next,
+          totalCount: count,
+        } = await fetchProductReviews(productSlug, page);
         setReviews((prev) => {
           if (page === 1) {
             return fetched;
@@ -155,7 +190,7 @@ export function ProductReviews({
         setLoading(false);
       }
     },
-    [productSlug]
+    [productSlug],
   );
 
   useEffect(() => {
@@ -176,11 +211,15 @@ export function ProductReviews({
     try {
       const accessToken = (session as any)?.accessToken as string | undefined;
       if (editingReview) {
-        const updated = await updateProductReview(editingReview.id, {
-          rating: form.rating,
-          title: form.title,
-          body: form.body,
-        }, accessToken);
+        const updated = await updateProductReview(
+          editingReview.id,
+          {
+            rating: form.rating,
+            title: form.title,
+            body: form.body,
+          },
+          accessToken,
+        );
         setReviews((prev) => prev.map((review) => (review.id === updated.id ? updated : review)));
         resetForm();
       } else {
@@ -271,11 +310,15 @@ export function ProductReviews({
 
       {!isAuthenticated && (
         <p className="product-reviews__hint">
-          {"\u0412\u044b \u043c\u043e\u0436\u0435\u0442\u0435 \u043e\u0441\u0442\u0430\u0432\u0438\u0442\u044c \u043e\u0442\u0437\u044b\u0432 \u0431\u0435\u0437 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u0438."}{" "}
+          {
+            "\u0412\u044b \u043c\u043e\u0436\u0435\u0442\u0435 \u043e\u0441\u0442\u0430\u0432\u0438\u0442\u044c \u043e\u0442\u0437\u044b\u0432 \u0431\u0435\u0437 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u0438."
+          }{" "}
           <Link href="/api/auth/signin" className="link">
             {"\u0412\u043e\u0439\u0434\u0438\u0442\u0435"}
           </Link>{" "}
-          {"\u0435\u0441\u043b\u0438 \u0445\u043e\u0442\u0438\u0442\u0435 \u043f\u0440\u0438\u0432\u044f\u0437\u0430\u0442\u044c \u043e\u0442\u0437\u044b\u0432 \u043a \u0441\u0432\u043e\u0435\u043c\u0443 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0443."}
+          {
+            "\u0435\u0441\u043b\u0438 \u0445\u043e\u0442\u0438\u0442\u0435 \u043f\u0440\u0438\u0432\u044f\u0437\u0430\u0442\u044c \u043e\u0442\u0437\u044b\u0432 \u043a \u0441\u0432\u043e\u0435\u043c\u0443 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0443."
+          }
         </p>
       )}
 
@@ -285,13 +328,12 @@ export function ProductReviews({
           <div className="form-grid">
             <label>
               <span>Оценка</span>
-              
+
               <StarRating
                 value={form.rating}
                 disabled={submitting}
                 onChange={(next) => setForm((prev) => ({ ...prev, rating: next }))}
               />
-
             </label>
             {!isAuthenticated && (
               <label>
@@ -299,7 +341,9 @@ export function ProductReviews({
                 <input
                   type="text"
                   value={form.authorName}
-                  onChange={(event) => setForm((prev) => ({ ...prev, authorName: event.target.value }))}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, authorName: event.target.value }))
+                  }
                   placeholder="\u041f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u044c\u0442\u0435\u0441\u044c, \u0447\u0442\u043e\u0431\u044b \u043f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u0438\u043c\u044f \u0440\u044f\u0434\u043e\u043c \u0441 \u043e\u0442\u0437\u044b\u0432\u043e\u043c"
                   disabled={submitting}
                   maxLength={120}
@@ -330,10 +374,19 @@ export function ProductReviews({
             </label>
           </div>
           <div className="product-reviews__form-actions">
-            <button className="btn btn-primary" onClick={handleCreateOrUpdate} disabled={submitting || !form.body.trim()}>
+            <button
+              className="btn btn-primary"
+              onClick={handleCreateOrUpdate}
+              disabled={submitting || !form.body.trim()}
+            >
               {submitting ? "Сохраняем..." : "Отправить"}
             </button>
-            <button className="btn btn-secondary" type="button" onClick={resetForm} disabled={submitting}>
+            <button
+              className="btn btn-secondary"
+              type="button"
+              onClick={resetForm}
+              disabled={submitting}
+            >
               Отмена
             </button>
           </div>
@@ -353,16 +406,26 @@ export function ProductReviews({
             <div className="product-review-card__meta">
               <span>{formatDate(review.created_at)}</span>
               {review.verified_purchase && <span className="tag">Проверенная покупка</span>}
-              <span className={`tag tag--${review.moderation_status}`}>{moderationLabel(review.moderation_status)}</span>
+              <span className={`tag tag--${review.moderation_status}`}>
+                {moderationLabel(review.moderation_status)}
+              </span>
             </div>
             {review.title && <h4 className="product-review-card__title">{review.title}</h4>}
             <p className="product-review-card__body">{review.body}</p>
             {review.is_owner && (
               <div className="product-review-card__actions">
-                <button className="btn btn-secondary" onClick={() => handleEdit(review)} disabled={submitting}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => handleEdit(review)}
+                  disabled={submitting}
+                >
                   Редактировать
                 </button>
-                <button className="btn btn-outline" onClick={() => handleDelete(review.id)} disabled={submitting}>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => handleDelete(review.id)}
+                  disabled={submitting}
+                >
                   Удалить
                 </button>
               </div>
@@ -378,9 +441,10 @@ export function ProductReviews({
       )}
 
       {!loading && reviews.length === 0 && (
-        <p className="product-reviews__empty">Будьте первым, кто поделится впечатлением о товаре.</p>
+        <p className="product-reviews__empty">
+          Будьте первым, кто поделится впечатлением о товаре.
+        </p>
       )}
     </section>
   );
 }
-

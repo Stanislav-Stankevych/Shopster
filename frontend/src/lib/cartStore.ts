@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
@@ -93,7 +92,9 @@ function getStorage() {
   return window.localStorage;
 }
 
-function parseCartResponse(data: CartApiResponse): Pick<CartState, "items" | "subtotal" | "totalItems"> {
+function parseCartResponse(
+  data: CartApiResponse,
+): Pick<CartState, "items" | "subtotal" | "totalItems"> {
   const items: CartItem[] = data.items.map((item) => ({
     id: item.id,
     quantity: item.quantity,
@@ -199,7 +200,9 @@ export const useCartStore = create<CartState>()(
             const data = await response.json().catch(() => ({}));
             const message =
               typeof data === "object" && data
-                ? Object.values(data as Record<string, string[]>).flat().join(" ")
+                ? Object.values(data as Record<string, string[]>)
+                    .flat()
+                    .join(" ")
                 : "Failed to add product to cart.";
             throw new Error(message);
           }
@@ -274,13 +277,20 @@ export const useCartStore = create<CartState>()(
         const response = await fetch(`${API_BASE_URL}/api/orders/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart_id: cartId, shipping_amount: 0, currency: "RUB", ...payload }),
+          body: JSON.stringify({
+            cart_id: cartId,
+            shipping_amount: 0,
+            currency: "RUB",
+            ...payload,
+          }),
         });
         if (!response.ok) {
           const data = await response.json().catch(() => ({}));
           const message =
             typeof data === "object" && data
-              ? Object.values(data as Record<string, string[]>).flat().join(" ")
+              ? Object.values(data as Record<string, string[]>)
+                  .flat()
+                  .join(" ")
               : "Failed to submit order.";
           throw new Error(message);
         }
@@ -293,7 +303,6 @@ export const useCartStore = create<CartState>()(
       name: "shopster-cart",
       storage: createJSONStorage(getStorage),
       partialize: (state) => ({ cartId: state.cartId }),
-    }
-  )
+    },
+  ),
 );
-

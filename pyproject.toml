@@ -1,0 +1,32 @@
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+extend-exclude = [
+  "backend/**/migrations",
+]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+src_paths = ["backend"]
+skip_gitignore = true
+extend_skip = ["backend/**/migrations"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["backend"]
+extend-exclude = [
+  "backend/**/migrations",
+]
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+  "B",
+]
+ignore = [
+  "E501",
+]

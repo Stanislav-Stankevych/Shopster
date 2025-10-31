@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -14,13 +13,19 @@ export function AccountMenu() {
 
   if (!user) {
     return (
-      <button className="btn btn-outline nav-auth" onClick={() => signIn(undefined, { callbackUrl: "/account" })}>
+      <button
+        className="btn btn-outline nav-auth"
+        onClick={() => signIn(undefined, { callbackUrl: "/account" })}
+      >
         Sign in
       </button>
     );
   }
 
-  const displayName = user.first_name || user.last_name ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() : user.username;
+  const displayName =
+    user.first_name || user.last_name
+      ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()
+      : user.username;
 
   return (
     <div className="account-menu">
@@ -33,4 +38,3 @@ export function AccountMenu() {
     </div>
   );
 }
-

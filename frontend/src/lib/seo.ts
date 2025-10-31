@@ -9,8 +9,7 @@ export function absoluteUrl(path: string): string {
   return new URL(path, SITE_URL).toString();
 }
 
-export const DEFAULT_OG_IMAGE =
-  "https://dummyimage.com/1200x630/0f172a/ffffff.png&text=Shopster";
+export const DEFAULT_OG_IMAGE = "https://dummyimage.com/1200x630/0f172a/ffffff.png&text=Shopster";
 
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -49,4 +48,3 @@ export const defaultMetadata: Metadata = {
     follow: true,
   },
 };
-

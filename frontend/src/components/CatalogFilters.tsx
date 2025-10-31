@@ -41,7 +41,10 @@ function buildQueryString(values: CatalogFilterValues) {
 
 export function CatalogFilters({ categories, initialValues }: CatalogFiltersProps) {
   const router = useRouter();
-  const sortedCategories = useMemo(() => [...categories].sort((a, b) => a.name.localeCompare(b.name)), [categories]);
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.name.localeCompare(b.name)),
+    [categories],
+  );
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -59,7 +62,7 @@ export function CatalogFilters({ categories, initialValues }: CatalogFiltersProp
       const url = queryString ? `/products?${queryString}` : "/products";
       router.push(url);
     },
-    [router]
+    [router],
   );
 
   const handleReset = useCallback(() => {
@@ -69,7 +72,12 @@ export function CatalogFilters({ categories, initialValues }: CatalogFiltersProp
     <form className="catalog-filters" onSubmit={handleSubmit}>
       <label className="catalog-filters__search">
         <span>Search</span>
-        <input type="search" name="search" placeholder="Search products" defaultValue={initialValues.search ?? ""} />
+        <input
+          type="search"
+          name="search"
+          placeholder="Search products"
+          defaultValue={initialValues.search ?? ""}
+        />
       </label>
       <label>
         <span>Category</span>
@@ -84,11 +92,23 @@ export function CatalogFilters({ categories, initialValues }: CatalogFiltersProp
       </label>
       <label>
         <span>Price from</span>
-        <input type="number" name="min_price" min={0} step="0.01" defaultValue={initialValues.min_price ?? ""} />
+        <input
+          type="number"
+          name="min_price"
+          min={0}
+          step="0.01"
+          defaultValue={initialValues.min_price ?? ""}
+        />
       </label>
       <label>
         <span>Price to</span>
-        <input type="number" name="max_price" min={0} step="0.01" defaultValue={initialValues.max_price ?? ""} />
+        <input
+          type="number"
+          name="max_price"
+          min={0}
+          step="0.01"
+          defaultValue={initialValues.max_price ?? ""}
+        />
       </label>
       <label className="catalog-filters__checkbox">
         <input type="checkbox" name="in_stock" defaultChecked={initialValues.in_stock === "true"} />
@@ -115,12 +135,3 @@ export function CatalogFilters({ categories, initialValues }: CatalogFiltersProp
     </form>
   );
 }
-
-
-
-
-
-
-
-
-

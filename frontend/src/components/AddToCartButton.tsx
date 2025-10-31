@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
@@ -31,4 +30,3 @@ export function AddToCartButton({ productId, variant = "primary" }: Props) {
     </button>
   );
 }
-

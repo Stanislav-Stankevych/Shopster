@@ -1,16 +1,14 @@
 [tool.black]
 line-length = 88
 target-version = ["py312"]
-extend-exclude = [
-  "backend/**/migrations",
-]
+extend-exclude = "(?x)(\n  backend/.*/migrations\n)"
 
 [tool.isort]
 profile = "black"
 line_length = 88
 src_paths = ["backend"]
 skip_gitignore = true
-extend_skip = ["backend/**/migrations"]
+skip_glob = ["*/migrations/*"]
 
 [tool.ruff]
 line-length = 88

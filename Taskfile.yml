@@ -1,0 +1,48 @@
+version: "3"
+
+vars:
+  PYTHON: "{{.PYTHON | default \"python\"}}"
+
+tasks:
+  lint:python:
+    desc: Run Ruff, Black (check) and isort (check) over backend
+    cmds:
+      - "{{.PYTHON}} -m ruff check backend"
+      - "{{.PYTHON}} -m black --check backend"
+      - "{{.PYTHON}} -m isort --check-only backend"
+  format:python:
+    desc: Format backend code with isort and Black
+    cmds:
+      - "{{.PYTHON}} -m isort backend"
+      - "{{.PYTHON}} -m black backend"
+  lint:frontend:
+    desc: Run Next.js lint rules
+    cmds:
+      - npm run lint --prefix frontend
+  format:frontend:
+    desc: Check formatting with Prettier
+    cmds:
+      - npm run format --prefix frontend
+  format:frontend:fix:
+    desc: Apply Prettier fixes
+    cmds:
+      - npm run format:fix --prefix frontend
+  lint:
+    desc: Run all lint tasks
+    deps:
+      - lint:python
+      - lint:frontend
+  format:
+    desc: Format Python and frontend code
+    deps:
+      - format:python
+      - format:frontend
+  format:fix:
+    desc: Apply auto-fixes across the project
+    deps:
+      - format:python
+      - format:frontend:fix
+  hooks:install:
+    desc: Install pre-commit hooks
+    cmds:
+      - "{{.PYTHON}} -m pre_commit install"

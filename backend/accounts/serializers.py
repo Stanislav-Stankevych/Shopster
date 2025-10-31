@@ -27,7 +27,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "username", "email", "first_name", "last_name", "is_staff", "is_superuser", "profile")
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "is_superuser",
+            "profile",
+        )
         read_only_fields = ("id", "username", "email", "is_staff", "is_superuser")
 
 
@@ -58,11 +67,20 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "email", "password", "password_confirm", "first_name", "last_name")
+        fields = (
+            "username",
+            "email",
+            "password",
+            "password_confirm",
+            "first_name",
+            "last_name",
+        )
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password_confirm"]:
-            raise serializers.ValidationError({"password_confirm": "Пароли не совпадают."})
+            raise serializers.ValidationError(
+                {"password_confirm": "Пароли не совпадают."}
+            )
         return attrs
 
     def create(self, validated_data):
@@ -87,5 +105,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password_confirm"]:
-            raise serializers.ValidationError({"password_confirm": "Пароли не совпадают."})
+            raise serializers.ValidationError(
+                {"password_confirm": "Пароли не совпадают."}
+            )
         return attrs

@@ -20,4 +20,3 @@ class AdminEnglishMiddleware:
             return response
 
         return self.get_response(request)
-

@@ -17,7 +17,9 @@ class ProductFilter(django_filters.FilterSet):
         model = Product
         fields = ["category", "min_price", "max_price", "in_stock"]
 
-    def filter_category(self, queryset: QuerySet[Product], name: str, value: str | None) -> QuerySet[Product]:
+    def filter_category(
+        self, queryset: QuerySet[Product], name: str, value: str | None
+    ) -> QuerySet[Product]:
         if not value:
             return queryset
         lookup = Q(category__slug=value)
@@ -25,14 +27,18 @@ class ProductFilter(django_filters.FilterSet):
             lookup |= Q(category_id=value)
         return queryset.filter(lookup)
 
-    def filter_in_stock(self, queryset: QuerySet[Product], name: str, value: bool | None) -> QuerySet[Product]:
+    def filter_in_stock(
+        self, queryset: QuerySet[Product], name: str, value: bool | None
+    ) -> QuerySet[Product]:
         if value is None:
             return queryset
         if value:
             return queryset.filter(stock__gt=0)
         return queryset
 
-    def filter_search(self, queryset: QuerySet[Product], name: str, value: str | None) -> QuerySet[Product]:
+    def filter_search(
+        self, queryset: QuerySet[Product], name: str, value: str | None
+    ) -> QuerySet[Product]:
         if not value:
             return queryset
         sanitized = value.strip()

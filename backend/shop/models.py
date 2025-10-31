@@ -90,6 +90,8 @@ class Category(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
 class Product(SoftDeleteModel):
     category = models.ForeignKey(
         Category,
@@ -118,7 +120,9 @@ class Product(SoftDeleteModel):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(self.name, allow_unicode=True) or f"product-{uuid4().hex[:8]}"
+            base_slug = (
+                slugify(self.name, allow_unicode=True) or f"product-{uuid4().hex[:8]}"
+            )
             slug = base_slug
             counter = 1
             while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
@@ -134,6 +138,8 @@ class Product(SoftDeleteModel):
 
     def __str__(self) -> str:
         return self.name
+
+
 class ProductImage(models.Model):
     product = models.ForeignKey(
         Product,
@@ -222,6 +228,7 @@ class Order(SoftDeleteModel):
         PENDING = "pending", "Ожидает оплаты"
         PAID = "paid", "Оплачен"
         REFUNDED = "refunded", "Возврат"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="orders",
@@ -236,14 +243,18 @@ class Order(SoftDeleteModel):
         null=True,
         blank=True,
     )
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.PENDING
+    )
     payment_status = models.CharField(
         max_length=20,
         choices=PaymentStatus.choices,
         default=PaymentStatus.PENDING,
     )
     subtotal_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    shipping_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    shipping_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal("0.00")
+    )
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default="RUB")
     customer_email = models.EmailField()
@@ -276,9 +287,15 @@ class Order(SoftDeleteModel):
         **fields,
     ) -> "Order":
         with transaction.atomic():
-            cart = Cart.objects.select_for_update().prefetch_related("items__product").get(pk=cart.pk)
+            cart = (
+                Cart.objects.select_for_update()
+                .prefetch_related("items__product")
+                .get(pk=cart.pk)
+            )
             if not cart.items.exists():
-                raise ValueError("РќРµРІРѕР·РјРѕР¶РЅРѕ РѕС„РѕСЂРјРёС‚СЊ Р·Р°РєР°Р·: РєРѕСЂР·РёРЅР° РїСѓСЃС‚Р°.")
+                raise ValueError(
+                    "РќРµРІРѕР·РјРѕР¶РЅРѕ РѕС„РѕСЂРјРёС‚СЊ Р·Р°РєР°Р·: РєРѕСЂР·РёРЅР° РїСѓСЃС‚Р°."
+                )
 
             subtotal = Decimal("0.00")
             order = cls.objects.create(

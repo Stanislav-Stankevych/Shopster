@@ -1,23 +1,21 @@
-﻿from __future__ import annotations
-
-from datetime import datetime
-from decimal import Decimal
-from typing import Any
+from __future__ import annotations
 
 import logging
+from datetime import datetime
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.db.models import Avg, Count, Sum, Q
+from django.db.models import Avg, Count, Q, Sum
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.utils.timezone import make_aware
-from rest_framework import mixins, status, viewsets, serializers
+from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -30,8 +28,8 @@ from .serializers import (
     CategorySerializer,
     OrderCreateSerializer,
     OrderSerializer,
-    ProductSerializer,
     ProductReviewSerializer,
+    ProductSerializer,
 )
 from .utils import user_has_verified_purchase
 
@@ -77,8 +75,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
 
 
-class CartViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
-    queryset = Cart.objects.prefetch_related("items__product__category", "items__product__images")
+class CartViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = Cart.objects.prefetch_related(
+        "items__product__category", "items__product__images"
+    )
     serializer_class = CartSerializer
     permission_classes = [AllowAny]
     lookup_field = "id"
@@ -89,7 +94,9 @@ class CartViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Des
         )
         serializer = self.get_serializer(cart)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
 
 class CartItemViewSet(
@@ -138,7 +145,9 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
         return [AllowAny()]
 
     def get_queryset(self):
-        qs = ProductReview.all_objects.filter(deleted_at__isnull=True).select_related("product", "user")
+        qs = ProductReview.all_objects.filter(deleted_at__isnull=True).select_related(
+            "product", "user"
+        )
         request = self.request
         product_id = request.query_params.get("product")
         product_slug = request.query_params.get("product_slug")
@@ -173,18 +182,26 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
             serializer.save(
                 user=user,
                 author_name=author_name,
-                verified_purchase=user_has_verified_purchase(user, product) if user else False,
+                verified_purchase=(
+                    user_has_verified_purchase(user, product) if user else False
+                ),
                 moderation_status=ProductReview.ModerationStatus.PENDING,
             )
         except IntegrityError as exc:
             raise serializers.ValidationError(
-                {"non_field_errors": ["You have already submitted a review for this product."]}
+                {
+                    "non_field_errors": [
+                        "You have already submitted a review for this product."
+                    ]
+                }
             ) from exc
 
     def perform_update(self, serializer):
         review = serializer.save()
         if not review.verified_purchase:
-            review.verified_purchase = user_has_verified_purchase(review.user, review.product)
+            review.verified_purchase = user_has_verified_purchase(
+                review.user, review.product
+            )
         review.moderation_status = ProductReview.ModerationStatus.PENDING
         review.moderated_by = None
         review.moderated_at = None
@@ -215,14 +232,15 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "post", "head", "options"]
 
     def get_queryset(self):
-        queryset = Order.objects.select_related("user").prefetch_related("items__product", "items__product__images")
+        queryset = Order.objects.select_related("user").prefetch_related(
+            "items__product", "items__product__images"
+        )
         user = self.request.user
         if user.is_authenticated:
             if user.is_staff:
@@ -244,7 +262,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
-        output_serializer = OrderSerializer(order, context=self.get_serializer_context())
+        output_serializer = OrderSerializer(
+            order, context=self.get_serializer_context()
+        )
         auto_registered_user = getattr(serializer, "auto_registered_user", None)
         if auto_registered_user:
             self._send_account_setup_email(auto_registered_user)
@@ -254,7 +274,9 @@ class OrderViewSet(viewsets.ModelViewSet):
             response_payload["activation_email"] = auto_registered_user.email
         self._send_confirmation_email(order)
         headers = self.get_success_headers(output_serializer.data)
-        return Response(response_payload, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            response_payload, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     def _send_confirmation_email(self, order: Order) -> None:
         if not order.customer_email:
@@ -293,16 +315,18 @@ class OrderViewSet(viewsets.ModelViewSet):
             token_generator = PasswordResetTokenGenerator()
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_url = f"{settings.FRONTEND_PASSWORD_RESET_URL}?uid={uid}&token={token}"
+            reset_url = (
+                f"{settings.FRONTEND_PASSWORD_RESET_URL}?uid={uid}&token={token}"
+            )
             full_name = user.get_full_name() or user.get_username()
             message = (
-                f"Здравствуйте, {full_name}!\n\n"
-                "Для удобства мы создали для вас аккаунт в Shopster, чтобы вы могли отслеживать свои заказы.\n"
-                f"Перейдите по ссылке, чтобы придумать пароль и завершить регистрацию:\n{reset_url}\n\n"
-                "Если вы не оформляли заказ или не хотите создавать аккаунт, просто проигнорируйте это письмо."
+                f"Р—РґСЂР°РІСЃС‚РІСѓР№С‚Рµ, {full_name}!\n\n"
+                "Р”Р»СЏ СѓРґРѕР±СЃС‚РІР° РјС‹ СЃРѕР·РґР°Р»Рё РґР»СЏ РІР°СЃ Р°РєРєР°СѓРЅС‚ РІ Shopster, С‡С‚РѕР±С‹ РІС‹ РјРѕРіР»Рё РѕС‚СЃР»РµР¶РёРІР°С‚СЊ СЃРІРѕРё Р·Р°РєР°Р·С‹.\n"
+                f"РџРµСЂРµР№РґРёС‚Рµ РїРѕ СЃСЃС‹Р»РєРµ, С‡С‚РѕР±С‹ РїСЂРёРґСѓРјР°С‚СЊ РїР°СЂРѕР»СЊ Рё Р·Р°РІРµСЂС€РёС‚СЊ СЂРµРіРёСЃС‚СЂР°С†РёСЋ:\n{reset_url}\n\n"
+                "Р•СЃР»Рё РІС‹ РЅРµ РѕС„РѕСЂРјР»СЏР»Рё Р·Р°РєР°Р· РёР»Рё РЅРµ С…РѕС‚РёС‚Рµ СЃРѕР·РґР°РІР°С‚СЊ Р°РєРєР°СѓРЅС‚, РїСЂРѕСЃС‚Рѕ РїСЂРѕРёРіРЅРѕСЂРёСЂСѓР№С‚Рµ СЌС‚Рѕ РїРёСЃСЊРјРѕ."
             )
             send_mail(
-                subject="Добро пожаловать в Shopster",
+                subject="Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ Shopster",
                 message=message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
@@ -327,7 +351,10 @@ class StatisticsOverviewView(APIView):
                     start = make_aware(start)
                 order_queryset = order_queryset.filter(placed_at__gte=start)
             except ValueError:
-                return Response({"detail": "Invalid date_from format. Use ISO 8601."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "Invalid date_from format. Use ISO 8601."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         if date_to:
             try:
                 end = datetime.fromisoformat(date_to)
@@ -335,7 +362,10 @@ class StatisticsOverviewView(APIView):
                     end = make_aware(end)
                 order_queryset = order_queryset.filter(placed_at__lte=end)
             except ValueError:
-                return Response({"detail": "Invalid date_to format. Use ISO 8601."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "Invalid date_to format. Use ISO 8601."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         totals_by_currency_raw = order_queryset.values("currency").annotate(
             total_sales=Sum("total_amount"),
@@ -378,7 +408,3 @@ class StatisticsOverviewView(APIView):
             "top_products": top_products,
         }
         return Response(response_payload)
-
-
-
-

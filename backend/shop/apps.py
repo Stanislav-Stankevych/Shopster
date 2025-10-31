@@ -7,7 +7,8 @@ class ShopConfig(AppConfig):
     verbose_name = "Shop"
 
     def ready(self):
-        from . import signals, models  # noqa: F401
+        from . import models, signals  # noqa: F401
+
         # Set English model names in admin to avoid mojibake
         models.Category._meta.verbose_name = "Category"
         models.Category._meta.verbose_name_plural = "Categories"

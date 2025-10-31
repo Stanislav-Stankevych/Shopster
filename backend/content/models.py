@@ -46,7 +46,9 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(self.title, allow_unicode=True) or f"post-{self.pk or ''}"
+            base_slug = (
+                slugify(self.title, allow_unicode=True) or f"post-{self.pk or ''}"
+            )
             slug = base_slug
             counter = 1
             while Post.objects.filter(slug=slug).exclude(pk=self.pk).exists():
@@ -57,7 +59,9 @@ class Post(models.Model):
             self.meta_title = self.title
         if not self.meta_description:
             candidates = [self.summary, self.body]
-            self.meta_description = next((value.strip()[:500] for value in candidates if value), "")
+            self.meta_description = next(
+                (value.strip()[:500] for value in candidates if value), ""
+            )
         if self.is_published and not self.published_at:
             self.published_at = timezone.now()
         super().save(*args, **kwargs)
@@ -68,6 +72,3 @@ class Post(models.Model):
 
         base = getattr(django_settings, "SITE_URL", "http://localhost:8000")
         return f"{base.rstrip('/')}/blog/{self.slug}"
-
-
-

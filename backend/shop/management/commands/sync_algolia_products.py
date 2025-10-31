@@ -18,8 +18,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not settings.ALGOLIA_ENABLED:
-            self.stdout.write(self.style.WARNING("Algolia не настроена. Задайте переменные окружения и повторите."))
+            self.stdout.write(
+                self.style.WARNING(
+                    "Algolia не настроена. Задайте переменные окружения и повторите."
+                )
+            )
             return
         clear = options["clear"]
         sync_all_products(clear_index=clear)
-        self.stdout.write(self.style.SUCCESS("Товары синхронизированы с индексом Algolia."))
+        self.stdout.write(
+            self.style.SUCCESS("Товары синхронизированы с индексом Algolia.")
+        )

@@ -1,11 +1,11 @@
 ﻿from __future__ import annotations
 
 from rest_framework import filters, viewsets
-from rest_framework.permissions import IsAdminUser
+
+from shop.permissions import IsAdminOrReadOnly
 
 from .models import Post
 from .serializers import PostDetailSerializer, PostListSerializer
-from shop.permissions import IsAdminOrReadOnly
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -26,5 +26,3 @@ class PostViewSet(viewsets.ModelViewSet):
         if self.action == "list":
             return PostListSerializer
         return PostDetailSerializer
-
-

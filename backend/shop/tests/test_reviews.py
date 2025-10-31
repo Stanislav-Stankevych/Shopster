@@ -78,7 +78,9 @@ class ProductReviewAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         review = ProductReview.objects.with_unapproved().get()
         self.assertTrue(review.verified_purchase)
-        self.assertEqual(review.moderation_status, ProductReview.ModerationStatus.PENDING)
+        self.assertEqual(
+            review.moderation_status, ProductReview.ModerationStatus.PENDING
+        )
 
     def test_user_without_purchase_can_create_review(self):
         self.client.force_authenticate(self.other_user)
@@ -114,7 +116,9 @@ class ProductReviewAPITests(APITestCase):
         self.assertIsNone(review.user)
         self.assertEqual(review.author_name, "Свободный гость")
         self.assertFalse(review.verified_purchase)
-        self.assertEqual(review.moderation_status, ProductReview.ModerationStatus.PENDING)
+        self.assertEqual(
+            review.moderation_status, ProductReview.ModerationStatus.PENDING
+        )
         self.assertIsNone(response.data["user"]["id"])
         self.assertEqual(response.data["user"]["name"], "Свободный гость")
 
@@ -162,7 +166,9 @@ class ProductReviewAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         review = ProductReview.objects.with_unapproved().get(id=review_id)
-        self.assertEqual(review.moderation_status, ProductReview.ModerationStatus.APPROVED)
+        self.assertEqual(
+            review.moderation_status, ProductReview.ModerationStatus.APPROVED
+        )
         self.assertEqual(review.moderated_by, self.staff)
         self.assertEqual(review.moderation_note, "OK")
 
@@ -194,7 +200,9 @@ class ProductReviewAPITests(APITestCase):
         )
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
         review = ProductReview.objects.with_unapproved().get(id=review_id)
-        self.assertEqual(review.moderation_status, ProductReview.ModerationStatus.PENDING)
+        self.assertEqual(
+            review.moderation_status, ProductReview.ModerationStatus.PENDING
+        )
         self.assertIsNone(review.moderated_by)
 
     def test_product_detail_contains_rating_and_flags(self):

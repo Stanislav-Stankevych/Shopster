@@ -5,7 +5,9 @@ from django.db import models
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
+    )
     phone = models.CharField(max_length=32, blank=True)
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     default_shipping_address = models.CharField(max_length=500, blank=True)

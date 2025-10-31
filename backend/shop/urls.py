@@ -19,11 +19,17 @@ router.register("orders", OrderViewSet, basename="order")
 router.register("reviews", ProductReviewViewSet, basename="review")
 
 cart_items_list = CartItemViewSet.as_view({"get": "list", "post": "create"})
-cart_items_detail = CartItemViewSet.as_view({"patch": "partial_update", "delete": "destroy"})
+cart_items_detail = CartItemViewSet.as_view(
+    {"patch": "partial_update", "delete": "destroy"}
+)
 
 urlpatterns = [
     path("", include(router.urls)),
     path("carts/<uuid:cart_id>/items/", cart_items_list, name="cart-items-list"),
-    path("carts/<uuid:cart_id>/items/<int:pk>/", cart_items_detail, name="cart-items-detail"),
+    path(
+        "carts/<uuid:cart_id>/items/<int:pk>/",
+        cart_items_detail,
+        name="cart-items-detail",
+    ),
     path("stats/overview/", StatisticsOverviewView.as_view(), name="stats-overview"),
 ]

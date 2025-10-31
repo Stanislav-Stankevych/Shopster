@@ -41,7 +41,7 @@ PRODUCTS: list[ProductSeed] = [
         category="Электроника",
         price=Decimal("45990"),
         currency="RUB",
-        description="Флагманский смартфон с экраном 6.7\" AMOLED 120 Гц, тройной камерой 108 Мп и поддержкой 5G.",
+        description='Флагманский смартфон с экраном 6.7" AMOLED 120 Гц, тройной камерой 108 Мп и поддержкой 5G.',
         short_description="Флагманский смартфон 2025 года.",
         stock=25,
         sku="NX20-BLK-256",
@@ -209,7 +209,9 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         if options["reset"]:
-            self.stdout.write(self.style.WARNING("Очищаю существующие данные магазина..."))
+            self.stdout.write(
+                self.style.WARNING("Очищаю существующие данные магазина...")
+            )
             OrderItem.objects.all().delete()
             Order.objects.all().delete()
             CartItem.objects.all().delete()
@@ -223,8 +225,14 @@ class Command(BaseCommand):
         seeds = build_product_seeds(target_products)
         created_products = self._create_products(created_categories, seeds)
 
-        self.stdout.write(self.style.SUCCESS(f"Готово! Категорий: {len(created_categories)}, товаров: {len(created_products)}"))
-        self.stdout.write("Теперь можно открыть главную страницу http://localhost:8000/ и увидеть витрину.")
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Готово! Категорий: {len(created_categories)}, товаров: {len(created_products)}"
+            )
+        )
+        self.stdout.write(
+            "Теперь можно открыть главную страницу http://localhost:8000/ и увидеть витрину."
+        )
 
     def _create_categories(self) -> dict[str, Category]:
         categories: dict[str, Category] = {}
@@ -236,7 +244,9 @@ class Command(BaseCommand):
             categories[name] = category
         return categories
 
-    def _create_products(self, categories: dict[str, Category], seeds: list[ProductSeed]) -> list[Product]:
+    def _create_products(
+        self, categories: dict[str, Category], seeds: list[ProductSeed]
+    ) -> list[Product]:
         created_products: list[Product] = []
         for seed in seeds:
             category = categories[seed.category]
@@ -257,7 +267,9 @@ class Command(BaseCommand):
             # regenerate images
             product.images.all().delete()
             image_file = generate_image_bytes(seed.name, seed.color)
-            ProductImage.objects.create(product=product, image=image_file, alt_text=seed.name, is_main=True)
+            ProductImage.objects.create(
+                product=product, image=image_file, alt_text=seed.name, is_main=True
+            )
 
             created_products.append(product)
         return created_products

@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from algoliasearch.search_client import SearchClient
 from django.conf import settings
 from django.utils import timezone
-
-from algoliasearch.search_client import SearchClient
 
 from .models import Product
 
@@ -18,7 +17,9 @@ def get_index():
     if not settings.ALGOLIA_ENABLED:
         return None
     if _client is None:
-        _client = SearchClient.create(settings.ALGOLIA_APP_ID, settings.ALGOLIA_ADMIN_API_KEY)
+        _client = SearchClient.create(
+            settings.ALGOLIA_APP_ID, settings.ALGOLIA_ADMIN_API_KEY
+        )
     if _index is None:
         _index = _client.init_index(settings.ALGOLIA_INDEX_NAME)
     return _index
@@ -40,7 +41,11 @@ def serialize_product(product: Product) -> dict[str, Any]:
         "category": product.category.name if product.category else "",
         "category_slug": product.category.slug if product.category else "",
         "is_active": product.is_active,
-        "updated_at": product.updated_at.isoformat() if product.updated_at else timezone.now().isoformat(),
+        "updated_at": (
+            product.updated_at.isoformat()
+            if product.updated_at
+            else timezone.now().isoformat()
+        ),
         "image_url": image_url,
     }
 
@@ -85,7 +90,9 @@ def sync_all_products(clear_index: bool = False) -> None:
         index.clear_objects()
     records = [
         serialize_product(product)
-        for product in Product.objects.select_related("category").prefetch_related("images").filter(is_active=True)
+        for product in Product.objects.select_related("category")
+        .prefetch_related("images")
+        .filter(is_active=True)
     ]
     if records:
         index.save_objects(records)

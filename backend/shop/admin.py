@@ -2,8 +2,16 @@ from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from .models import Cart, CartItem, Category, Order, OrderItem, Product, ProductImage, ProductReview
-
+from .models import (
+    Cart,
+    CartItem,
+    Category,
+    Order,
+    OrderItem,
+    Product,
+    ProductImage,
+    ProductReview,
+)
 
 # Admin branding
 admin.site.site_header = "Shopster Admin"
@@ -112,9 +120,15 @@ class SoftDeleteAdmin(admin.ModelAdmin):
                 obj.delete()
                 count += 1
         if count:
-            self.message_user(request, _("Archived %(count)d record(s).") % {"count": count}, messages.SUCCESS)
+            self.message_user(
+                request,
+                _("Archived %(count)d record(s).") % {"count": count},
+                messages.SUCCESS,
+            )
         else:
-            self.message_user(request, _("Selected records are already archived."), messages.WARNING)
+            self.message_user(
+                request, _("Selected records are already archived."), messages.WARNING
+            )
 
     soft_delete_selected.short_description = _("Archive selected records")
 
@@ -125,9 +139,15 @@ class SoftDeleteAdmin(admin.ModelAdmin):
                 obj.restore()
                 count += 1
         if count:
-            self.message_user(request, _("Restored %(count)d record(s).") % {"count": count}, messages.SUCCESS)
+            self.message_user(
+                request,
+                _("Restored %(count)d record(s).") % {"count": count},
+                messages.SUCCESS,
+            )
         else:
-            self.message_user(request, _("No archived records were selected."), messages.WARNING)
+            self.message_user(
+                request, _("No archived records were selected."), messages.WARNING
+            )
 
     restore_selected.short_description = _("Restore selected records")
 
@@ -159,7 +179,16 @@ class ProductImageInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(SoftDeleteAdmin):
-    list_display = ("name", "sku", "category", "price", "stock", "is_active", "is_archived", "deleted_at")
+    list_display = (
+        "name",
+        "sku",
+        "category",
+        "price",
+        "stock",
+        "is_active",
+        "is_archived",
+        "deleted_at",
+    )
     list_filter = ("category", "is_active", DeletedStatusFilter)
     search_fields = ("name", "sku", "slug")
     prepopulated_fields = {"slug": ("name",)}
@@ -182,7 +211,13 @@ class CartAdmin(admin.ModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ("product", "product_name", "unit_price", "quantity", "line_total")
+    readonly_fields = (
+        "product",
+        "product_name",
+        "unit_price",
+        "quantity",
+        "line_total",
+    )
 
 
 @admin.register(Order)
@@ -199,7 +234,14 @@ class OrderAdmin(SoftDeleteAdmin):
     )
     list_filter = (OrderStatusFilter, OrderPaymentStatusFilter, DeletedStatusFilter)
     search_fields = ("id", "customer_email", "shipping_full_name")
-    readonly_fields = ("subtotal_amount", "total_amount", "currency", "placed_at", "updated_at", "deleted_at")
+    readonly_fields = (
+        "subtotal_amount",
+        "total_amount",
+        "currency",
+        "placed_at",
+        "updated_at",
+        "deleted_at",
+    )
     inlines = [OrderItemInline]
 
     @admin.display(description="Status")
@@ -229,9 +271,27 @@ class ProductReviewAdmin(SoftDeleteAdmin):
         "is_archived",
         "created_at",
     )
-    list_filter = (ReviewStatusFilter, "verified_purchase", DeletedStatusFilter, "rating")
-    search_fields = ("product__name", "user__email", "user__username", "author_name", "title", "body")
-    readonly_fields = ("created_at", "updated_at", "moderated_at", "moderated_by", "deleted_at")
+    list_filter = (
+        ReviewStatusFilter,
+        "verified_purchase",
+        DeletedStatusFilter,
+        "rating",
+    )
+    search_fields = (
+        "product__name",
+        "user__email",
+        "user__username",
+        "author_name",
+        "title",
+        "body",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "moderated_at",
+        "moderated_by",
+        "deleted_at",
+    )
     actions = SoftDeleteAdmin.actions + ["approve_reviews", "reject_reviews"]
 
     @admin.action(description=_("Approve selected reviews"))
@@ -242,7 +302,11 @@ class ProductReviewAdmin(SoftDeleteAdmin):
             moderated_at=timezone.now(),
         )
         if updated:
-            self.message_user(request, _("Approved %(count)d review(s).") % {"count": updated}, messages.SUCCESS)
+            self.message_user(
+                request,
+                _("Approved %(count)d review(s).") % {"count": updated},
+                messages.SUCCESS,
+            )
 
     @admin.action(description=_("Reject selected reviews"))
     def reject_reviews(self, request, queryset):
@@ -252,11 +316,17 @@ class ProductReviewAdmin(SoftDeleteAdmin):
             moderated_at=timezone.now(),
         )
         if updated:
-            self.message_user(request, _("Rejected %(count)d review(s).") % {"count": updated}, messages.WARNING)
+            self.message_user(
+                request,
+                _("Rejected %(count)d review(s).") % {"count": updated},
+                messages.WARNING,
+            )
 
     @admin.display(description="Moderation status")
     def display_moderation_status(self, obj: ProductReview):
-        return REVIEW_MODERATION_STATUS_LABELS.get(obj.moderation_status, obj.moderation_status)
+        return REVIEW_MODERATION_STATUS_LABELS.get(
+            obj.moderation_status, obj.moderation_status
+        )
 
     @admin.display(description=_("Author"))
     def display_author(self, obj: ProductReview):

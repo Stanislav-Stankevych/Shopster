@@ -49,11 +49,15 @@ class GuestCheckoutTests(APITestCase):
 
     def test_guest_checkout_creates_user_and_sends_email(self):
         cart = self._build_cart()
-        response = self.client.post("/api/orders/", self._order_payload(cart), format="json")
+        response = self.client.post(
+            "/api/orders/", self._order_payload(cart), format="json"
+        )
 
         self.assertEqual(response.status_code, 201, response.content)
         user_model = get_user_model()
-        self.assertEqual(user_model.objects.filter(email="guest@example.com").count(), 1)
+        self.assertEqual(
+            user_model.objects.filter(email="guest@example.com").count(), 1
+        )
         user = user_model.objects.get(email="guest@example.com")
         order = Order.objects.get(pk=response.data["id"])
 
@@ -68,7 +72,11 @@ class GuestCheckoutTests(APITestCase):
         self.assertIn(f"Order confirmation #{order.pk}", subjects)
         self.assertIn("Добро пожаловать в Shopster", subjects)
 
-        auto_email = next(email for email in mail.outbox if email.subject == "Добро пожаловать в Shopster")
+        auto_email = next(
+            email
+            for email in mail.outbox
+            if email.subject == "Добро пожаловать в Shopster"
+        )
         self.assertIn("reset-password", auto_email.body)
         self.assertEqual(auto_email.to, ["guest@example.com"])
 
@@ -81,12 +89,16 @@ class GuestCheckoutTests(APITestCase):
         )
         cart = self._build_cart()
 
-        response = self.client.post("/api/orders/", self._order_payload(cart), format="json")
+        response = self.client.post(
+            "/api/orders/", self._order_payload(cart), format="json"
+        )
 
         self.assertEqual(response.status_code, 201, response.content)
         order = Order.objects.get(pk=response.data["id"])
         self.assertEqual(order.user, existing_user)
-        self.assertEqual(user_model.objects.filter(email="guest@example.com").count(), 1)
+        self.assertEqual(
+            user_model.objects.filter(email="guest@example.com").count(), 1
+        )
         self.assertFalse(response.data["requires_account_activation"])
         self.assertNotIn("activation_email", response.data)
 

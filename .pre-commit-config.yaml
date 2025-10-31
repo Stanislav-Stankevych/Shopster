@@ -5,6 +5,7 @@ repos:
       - id: black
         name: black (backend)
         types: [python]
+        exclude: backend/.*/migrations/
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:

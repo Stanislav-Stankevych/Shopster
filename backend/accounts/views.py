@@ -1,5 +1,4 @@
-﻿
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -34,10 +33,14 @@ class MeView(APIView):
         return response.Response(serializer.data)
 
     def patch(self, request):
-        serializer = UserUpdateSerializer(instance=request.user, data=request.data, partial=True)
+        serializer = UserUpdateSerializer(
+            instance=request.user, data=request.data, partial=True
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return response.Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
+        return response.Response(
+            UserSerializer(request.user).data, status=status.HTTP_200_OK
+        )
 
 
 class PasswordResetRequestView(APIView):
@@ -53,14 +56,22 @@ class PasswordResetRequestView(APIView):
             token_generator = PasswordResetTokenGenerator()
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_url = f"{settings.FRONTEND_PASSWORD_RESET_URL}?uid={uid}&token={token}"
+            reset_url = (
+                f"{settings.FRONTEND_PASSWORD_RESET_URL}?uid={uid}&token={token}"
+            )
             subject = "Password reset request"
             message = (
                 "You requested a password reset.\n\n"
                 f"Follow the link to set a new password:\n{reset_url}\n\n"
                 "If you did not send this request, simply ignore this email."
             )
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=True,
+            )
         return response.Response(
             {"detail": "If the email is registered, we have sent reset instructions."},
             status=status.HTTP_202_ACCEPTED,
@@ -81,13 +92,19 @@ class PasswordResetConfirmView(APIView):
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid, is_active=True)
         except (User.DoesNotExist, ValueError, TypeError, OverflowError):
-            return response.Response({"detail": "Reset link is invalid."}, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response(
+                {"detail": "Reset link is invalid."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         token_generator = PasswordResetTokenGenerator()
         if not token_generator.check_token(user, token):
-            return response.Response({"detail": "Reset link is invalid or has expired."}, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response(
+                {"detail": "Reset link is invalid or has expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user.set_password(password)
         user.save(update_fields=["password"])
-        return response.Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
-
+        return response.Response(
+            {"detail": "Password updated successfully."}, status=status.HTTP_200_OK
+        )

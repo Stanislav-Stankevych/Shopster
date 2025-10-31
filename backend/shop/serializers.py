@@ -16,7 +16,6 @@ from .models import (
     ProductImage,
     ProductReview,
 )
-from .utils import user_has_verified_purchase
 
 User = get_user_model()
 
@@ -52,7 +51,9 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         queryset=Product.objects.filter(is_active=True),
         write_only=True,
     )
-    author_name = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=255)
+    author_name = serializers.CharField(
+        write_only=True, required=False, allow_blank=True, max_length=255
+    )
     user = serializers.SerializerMethodField()
     is_owner = serializers.SerializerMethodField()
 
@@ -101,7 +102,9 @@ class ProductReviewSerializer(serializers.ModelSerializer):
                 "id": obj.user_id,
                 "name": name,
             }
-        display_name = (obj.author_name or "").strip() or "\u0413\u043e\u0441\u0442\u044c"
+        display_name = (
+            obj.author_name or ""
+        ).strip() or "\u0413\u043e\u0441\u0442\u044c"
         return {
             "id": None,
             "name": display_name,
@@ -187,11 +190,16 @@ class ProductSerializer(serializers.ModelSerializer):
         if not request:
             return False
         user = request.user if request.user.is_authenticated else None
-        if user and ProductReview.objects.with_unapproved().filter(
-            product=obj,
-            user=user,
-            deleted_at__isnull=True,
-        ).exists():
+        if (
+            user
+            and ProductReview.objects.with_unapproved()
+            .filter(
+                product=obj,
+                user=user,
+                deleted_at__isnull=True,
+            )
+            .exists()
+        ):
             return False
         return True
 
@@ -199,11 +207,15 @@ class ProductSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return None
-        review = ProductReview.objects.with_unapproved().filter(
-            product=obj,
-            user=request.user,
-            deleted_at__isnull=True,
-        ).first()
+        review = (
+            ProductReview.objects.with_unapproved()
+            .filter(
+                product=obj,
+                user=request.user,
+                deleted_at__isnull=True,
+            )
+            .first()
+        )
         if not review:
             return None
         return ProductReviewSerializer(review, context=self.context).data
@@ -349,7 +361,9 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         self.auto_registered_user = resolved_user if is_auto_registered else None
         return order
 
-    def _resolve_user(self, request_user, *, email: str | None, full_name: str) -> tuple[object | None, bool]:
+    def _resolve_user(
+        self, request_user, *, email: str | None, full_name: str
+    ) -> tuple[object | None, bool]:
         if request_user and request_user.is_authenticated:
             return request_user, False
         if not email:

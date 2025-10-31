@@ -1,7 +1,7 @@
 [tool.black]
 line-length = 88
 target-version = ["py312"]
-extend-exclude = "(?x)(\n  backend/.*/migrations\n)"
+extend-exclude = "backend/.*/migrations/.*"
 
 [tool.isort]
 profile = "black"

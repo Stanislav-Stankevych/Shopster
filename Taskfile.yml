@@ -1,7 +1,7 @@
 version: "3"
 
 vars:
-  PYTHON: "{{.PYTHON | default \"python\"}}"
+  PYTHON: '{{if .PYTHON}}{{.PYTHON}}{{else}}{{if eq OS "windows"}}./.venv/Scripts/python.exe{{else}}./.venv/bin/python{{end}}{{end}}'
 
 tasks:
   lint:python:

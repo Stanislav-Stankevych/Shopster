@@ -9,6 +9,8 @@ from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
+from sentry_sdk import init as sentry_init
+from sentry_sdk.integrations.django import DjangoIntegration
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -233,6 +235,16 @@ EMAIL_USE_TLS = getenv_bool("DJANGO_EMAIL_USE_TLS", True)
 FRONTEND_PASSWORD_RESET_URL = os.getenv(
     "FRONTEND_PASSWORD_RESET_URL", "http://localhost:3000/reset-password"
 )
+
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+if SENTRY_DSN:
+    sentry_init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0")),
+        profiles_sample_rate=float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.0")),
+        send_default_pii=getenv_bool("SENTRY_SEND_PII", False),
+    )
 
 # Jazzmin configuration
 JAZZMIN_SETTINGS = {

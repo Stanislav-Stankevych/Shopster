@@ -50,6 +50,12 @@ INSTALLED_APPS = [
     "content",
 ]
 
+if DEBUG:
+    INSTALLED_APPS += [
+        "debug_toolbar",
+        "django_extensions",
+    ]
+
 MIDDLEWARE = [
     "core.middleware.AdminEnglishMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -62,6 +68,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+if DEBUG:
+    MIDDLEWARE.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")
+    INTERNAL_IPS = ["127.0.0.1", "localhost"]
 
 ROOT_URLCONF = "core.urls"
 

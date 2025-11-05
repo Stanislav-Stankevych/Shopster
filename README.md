@@ -1,0 +1,195 @@
+# Shopster — Full-Stack Commerce Demo
+
+Shopster is a production-ready ecommerce starter that combines a **Django 5 / DRF** backend with a **Next.js 15 / TypeScript** storefront. The goal of this repository is to demonstrate a real-world, end-to-end web product: API design, infrastructure, UX, and deployment.
+
+---
+
+## 🚀 Live Demo & References
+
+| Surface | URL | Notes |
+| --- | --- | --- |
+| Storefront | http://159.89.27.194:3000 | Next.js SSR storefront with catalog, checkout, account area |
+| Backend API | http://159.89.27.194:8000 | Django/Gunicorn service (REST API + admin) |
+| Swagger UI | http://159.89.27.194:8000/api/docs/ | Interactive API reference |
+| OpenAPI JSON | http://159.89.27.194:8000/api/schema/ | Machine-readable schema |
+| Admin (Jazzmin) | http://159.89.27.194:8000/admin/ | Customised Django admin (request demo creds) |
+
+---
+
+## 🧩 Tech Stack
+
+| Layer | Technologies |
+| --- | --- |
+| Backend | Django 5, Django REST Framework, PostgreSQL 16, Redis 7, SimpleJWT, django-filter, django-taggit, django-quill, Sentry |
+| Frontend | Next.js 15 (App Router), React 18, TypeScript, NextAuth, Zustand, Algolia InstantSearch, SEO helpers |
+| Infrastructure & Tooling | Docker Compose, Gunicorn, Whitenoise, go-task, pre-commit (ruff, black, isort, prettier), GitHub Actions (CI), Algolia sync scripts |
+
+---
+
+## ✅ Feature Highlights
+
+### Backend
+- Catalog & orders: products, categories, images, carts, orders with soft delete and audit actions.
+- Authentication: JWT login/refresh, profile updates, password reset flows.
+- Content & SEO: blog module (Quill rich text, tags), SEO meta fields, sitemap/robots, OpenGraph defaults.
+- Search: Algolia indexing and sync via management commands.
+- Tooling: Swagger/Redoc, OpenAPI schema, django-debug-toolbar, django-extensions.
+
+### Frontend
+- Product discovery: filters (category, price range, stock status, ordering), server-side search, infinite scroll.
+- Algolia autosuggest: type-ahead dropdown with quick navigation links.
+- Cart & checkout: Zustand state management, checkout success flow with order summary.
+- Account experience: sign up/in, forgot password, profile forms, protected routes.
+- Blog: listing and detail pages with metadata and tags synced from Django admin.
+- SEO: metadata utilities, canonical URLs, sitemap integration.
+
+### DevOps & DX
+- Dockerised dev/prod parity (web, frontend, db, redis services).
+- go-task macros for lint/format/test, pre-commit hooks for Python & JS.
+- GitHub Actions workflows for backend and frontend lint/build checks.
+- Deployment notes, DB dump/import scripts, Algolia sync helpers.
+
+---
+
+## 🗺 Architecture Overview
+
+```
+┌───────────────────────────────────────────────────────────────────┐
+│                              Docker                               │
+│                                                                   │
+│  ┌─────────────┐    REST/JSON     ┌─────────────┐    Redis Cache  │
+│  │  frontend   │ <──────────────► │    web      │ ◄────────────┐  │
+│  │ Next.js 15  │                  │ Django/DRF  │               │  │
+│  │ Port 3000   │ ◄──────────────► │ Port 8000   │ ──────────────┘  │
+│  └─────────────┘    static + API  └─────────────┘                  │
+│         ▲                              │                          │
+│         │ SSR/ISR                      │ ORM                      │
+│         │                              ▼                          │
+│  ┌─────────────┐                 ┌─────────────┐                  │
+│  │   Browser   │                 │ PostgreSQL  │                  │
+│  └─────────────┘                 └─────────────┘                  │
+│                                                                   │
+│  ┌─────────────┐  search sync  ┌─────────────┐                    │
+│  │ Management  │──────────────►│   Algolia   │                    │
+│  │ Commands    │               └─────────────┘                    │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🛠 Getting Started (Local)
+
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 20+ (for local storefront development)
+- go-task (`winget install Task.Task`) — optional yet convenient
+
+### 1. Clone the repo & prepare environment variables
+
+```bash
+git clone https://github.com/StanislavDjango/Shopster.git
+cd Shopster
+cp .env.example .env
+cp frontend/.env.local.example frontend/.env.local
+```
+
+Fill in the key parameters (JWT secret, Algolia credentials, database).
+
+### 2. Run via Docker
+
+```bash
+docker compose up --build -d
+docker compose exec web python backend/manage.py migrate
+docker compose exec web python backend/manage.py createsuperuser
+docker compose exec web python backend/manage.py load_demo_data --reset --products 120
+```
+
+### 3. Frontend in dev mode
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Useful URLs
+- Storefront: `http://localhost:3000`
+- API root: `http://localhost:8000/api/`
+- Swagger: `http://localhost:8000/api/docs/`
+- Admin: `http://localhost:8000/admin/`
+
+---
+
+## 🧪 Linting & Tests
+
+```bash
+# unified command (requires go-task)
+task lint
+# auto-formatting
+task format:fix
+
+# manual commands
+ruff check backend
+black backend
+isort backend
+(cd frontend && npm run lint)
+(cd frontend && npm run test)     # if unit/e2e tests are added
+```
+
+---
+
+## 🚀 Deployment Notes
+
+- Production runs on a VPS using Docker Compose (`deploy/docker-compose.yml`).
+- Container images are available on Docker Hub:
+  - `stanyslav/vebsaythub:latest` — backend (Gunicorn + Django)
+  - `stanyslav/vebsayt-frontend:latest` — Next.js storefront
+- Environment files live on the server in `/srv/vebsayt` (`.env`, `.env.local.frontend`).
+- Algolia re-sync:
+  ```bash
+  docker compose exec web python backend/manage.py sync_algolia_products --clear
+  ```
+- Detailed deployment steps are documented in [`docs/deployment-notes.md`](docs/deployment-notes.md).
+
+---
+
+## 📂 Project Structure
+
+```
+Shopster/
+├── backend/                # Django project (core, shop, accounts, content apps)
+├── frontend/               # Next.js storefront
+├── deploy/                 # Production compose + env templates
+├── docker/                 # Entry points, Dockerfiles
+├── docs/                   # Deployment and architecture notes
+├── scripts/                # Utility scripts (dump/import)
+├── Taskfile.yml            # go-task recipes
+├── docker-compose.yml      # Dev compose
+├── docker-compose.prod.yml # Production compose example
+└── README.md
+```
+
+---
+
+## 🧭 Roadmap Ideas
+- Integrate Stripe/YooKassa payments with webhook handling.
+- Add Celery/RQ workers for email, indexing, background jobs.
+- Extend GitHub Actions with pytest, coverage reports, Docker build & push.
+- Publish JSON-LD schema.org for products and blog posts.
+- Infrastructure-as-code examples with Terraform/Ansible.
+
+---
+
+## 📄 License
+
+No license is set yet. Add MIT/Apache if you plan to open-source the project.
+
+---
+
+## 👋 Contact
+
+- **Author:** Stanislav Stankevych ([@StanislavDjango](https://github.com/StanislavDjango))
+- **Demo:** http://159.89.27.194:3000
+- **Feedback:** please open an issue or use the contact details in the GitHub profile.
+
+> Contributions, ideas, and reviews are always welcome!

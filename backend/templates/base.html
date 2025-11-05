@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Магазин{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-inner">
+                <a class="logo" href="/">Shopster</a>
+                <nav class="nav-links">
+                    <a href="#features">Возможности</a>
+                    <a href="#products">Каталог</a>
+                    <a href="#cta">Контакты</a>
+                    <a class="nav-btn" href="/admin/">Админка</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; {% now "Y" %} Shopster. Все права защищены.</p>
+            <div class="footer-links">
+                <a href="mailto:shop@example.com">shop@example.com</a>
+                <a href="tel:+79991234567">+7 (999) 123-45-67</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

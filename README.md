@@ -1,5 +1,9 @@
 # Shopster — Full-Stack Commerce Demo
 
+[![Backend CI](https://github.com/StanislavDjango/Shopster/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/StanislavDjango/Shopster/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/StanislavDjango/Shopster/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/StanislavDjango/Shopster/actions/workflows/frontend-ci.yml)
+[![Docker Hub](https://img.shields.io/badge/docker-ready-blue?logo=docker)](https://hub.docker.com/u/stanyslav)
+
 Shopster is a production-ready ecommerce starter that combines a **Django 5 / DRF** backend with a **Next.js 15 / TypeScript** storefront. The goal of this repository is to demonstrate a real-world, end-to-end web product: API design, infrastructure, UX, and deployment.
 
 ---
@@ -180,9 +184,32 @@ Shopster/
 
 ---
 
+## 🗃 Additional Docs
+
+- [Architecture overview](docs/architecture.md)
+- [API request examples](docs/api-examples.md)
+- [Deployment runbook](docs/deployment-notes.md)
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository and create a feature branch: `git checkout -b feature/my-improvement`.
+2. Install tooling (`pip install -r requirements-dev.txt`, `npm install` in `frontend/`).
+3. Run the quality gates:
+   ```bash
+   task lint
+   task format:fix
+   ```
+4. Commit with conventional messages and open a Pull Request. The CI pipelines (backend/frontend) must pass before merge.
+
+Bug reports and feature ideas are welcome via [Issues](https://github.com/StanislavDjango/Shopster/issues).
+
+---
+
 ## 📄 License
 
-No license is set yet. Add MIT/Apache if you plan to open-source the project.
+Released under the [MIT License](LICENSE). You’re free to use the code in commercial or personal projects with proper attribution.
 
 ---
 

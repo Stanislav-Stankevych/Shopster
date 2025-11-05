@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, Suspense, useState, useTransition } from "react";
 
 import { API_BASE_URL } from "@/lib/config";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const uid = searchParams.get("uid") ?? "";
@@ -116,5 +116,13 @@ export default function ResetPasswordPage() {
         </p>
       </div>
     </section>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

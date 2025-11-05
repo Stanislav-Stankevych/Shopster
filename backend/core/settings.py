@@ -30,6 +30,13 @@ DEBUG = getenv_bool("DJANGO_DEBUG", False)
 _allowed_hosts = os.getenv("DJANGO_ALLOWED_HOSTS", "*")
 ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts.split(",") if host.strip()]
 
+SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
+NEXT_PUBLIC_SITE_URL = os.getenv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000")
+FRONTEND_SITE_URL = os.getenv(
+    "FRONTEND_SITE_URL",
+    NEXT_PUBLIC_SITE_URL,
+)
+
 
 INSTALLED_APPS = [
     "jazzmin",  # Must be before django.contrib.admin
@@ -274,11 +281,12 @@ JAZZMIN_SETTINGS = {
         "taggit",
     ],
     # Top menu entries
+    "site_url": FRONTEND_SITE_URL,
     "topmenu_links": [
         {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"app": "shop", "name": "Catalog"},
         {"model": "auth.User", "name": "Users"},
-        {"name": "Site", "url": "/", "new_window": True},
+        {"name": "Site", "url": FRONTEND_SITE_URL, "new_window": True},
     ],
     # Per-app/model icons
     "icons": {
@@ -304,7 +312,12 @@ JAZZMIN_SETTINGS = {
     },
     # Useful quick links in user menu
     "usermenu_links": [
-        {"name": "View site", "url": "/", "icon": "fas fa-globe", "new_window": True},
+        {
+            "name": "View site",
+            "url": FRONTEND_SITE_URL,
+            "icon": "fas fa-globe",
+            "new_window": True,
+        },
         {"model": "auth.user"},
     ],
 }

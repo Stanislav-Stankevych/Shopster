@@ -1,5 +1,5 @@
-﻿import { Buffer } from "buffer";
-import type { NextAuthOptions } from "next-auth";
+import { Buffer } from "buffer";
+import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
 import { API_BASE_URL } from "@/lib/config";
@@ -96,7 +96,7 @@ async function refreshAccessToken(token: any) {
   };
 }
 
-export const authOptions: NextAuthOptions = {
+export const authOptions: NextAuthConfig = {
   secret: process.env.AUTH_SECRET,
   session: { strategy: "jwt" },
   pages: {
@@ -110,11 +110,13 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.identifier || !credentials.password) {
+        const identifier = credentials?.identifier as string | undefined;
+        const password = credentials?.password as string | undefined;
+        if (!identifier || !password) {
           return null;
         }
         try {
-          const { user, tokens } = await login(credentials.identifier, credentials.password);
+          const { user, tokens } = await login(identifier, password);
           return {
             ...user,
             ...tokens,

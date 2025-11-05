@@ -126,7 +126,7 @@ export function AlgoliaSearch() {
 
   return (
     <InstantSearch searchClient={searchClient} indexName={ALGOLIA_INDEX}>
-      <Configure hitsPerPage={5} />
+      <Configure {...({ hitsPerPage: 5 } as any)} />
       <div className="header-search">
         <SearchBox placeholder="Поиск товаров…" />
         <SearchDropdown />

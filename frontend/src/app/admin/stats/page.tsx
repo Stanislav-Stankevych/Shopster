@@ -9,8 +9,10 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
+type SearchParams = Record<string, string | string[] | undefined>;
+
 type StatsPageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<SearchParams>;
 };
 
 function normalizeParam(value?: string | string[]): string | undefined {
@@ -51,8 +53,10 @@ export default async function AdminStatsPage({ searchParams }: StatsPageProps) {
     redirect(`/signin?callbackUrl=/admin/stats`);
   }
 
-  const dateFromParam = normalizeParam(searchParams?.date_from);
-  const dateToParam = normalizeParam(searchParams?.date_to);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
+  const dateFromParam = normalizeParam(resolvedSearchParams?.date_from);
+  const dateToParam = normalizeParam(resolvedSearchParams?.date_to);
 
   const query = {
     dateFrom: dateFromParam,

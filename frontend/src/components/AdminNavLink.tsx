@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+import { BACKEND_ORIGIN } from "@/lib/config";
+
 export function AdminNavLink() {
   const { data: session } = useSession();
 
@@ -13,7 +15,7 @@ export function AdminNavLink() {
   return (
     <>
       <Link href="/admin/stats">Admin dashboard</Link>
-      <a href="http://localhost:3000admin/" target="_blank" rel="noreferrer noopener">
+      <a href={`${BACKEND_ORIGIN}/admin/`} target="_blank" rel="noreferrer noopener">
         Django admin
       </a>
     </>

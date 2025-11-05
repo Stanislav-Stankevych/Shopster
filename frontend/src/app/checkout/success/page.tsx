@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessContent() {
   const search = useSearchParams();
   const orderId = search.get("order");
   const activationEmail = search.get("activationEmail");
@@ -32,5 +33,13 @@ export default function CheckoutSuccessPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }

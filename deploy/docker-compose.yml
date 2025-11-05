@@ -1,0 +1,50 @@
+
+services:
+  web:
+    image: stanyslav/vebsaythub:latest
+    env_file:
+      - /srv/vebsayt/.env
+    volumes:
+      - static_volume:/app/backend/staticfiles
+      - media_volume:/app/backend/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-shop}
+      POSTGRES_USER: ${POSTGRES_USER:-POSTGRES}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-198424}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  frontend:
+    image: stanyslav/vebsayt-frontend:latest
+    env_file:
+      - /srv/vebsayt/.env.local.frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+
+

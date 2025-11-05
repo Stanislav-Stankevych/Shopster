@@ -19,12 +19,15 @@ function buildImageUrl(imageUrl?: string | null): string | undefined {
   }
 }
 
+type BlogPageParams = { slug: string };
+
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<BlogPageParams>;
 }): Promise<Metadata> {
-  const post = await fetchPost(params.slug);
+  const { slug } = await params;
+  const post = await fetchPost(slug);
   if (!post) {
     return {
       title: "Запись не найдена",
@@ -66,7 +69,7 @@ export async function generateMetadata({
 }
 
 type BlogPostPageProps = {
-  params: Promise<{ slug: string }>;
+  params: Promise<BlogPageParams>;
 };
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {

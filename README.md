@@ -188,6 +188,8 @@ Shopster/
 
 - [Architecture overview](docs/architecture.md)
 - [API request examples](docs/api-examples.md)
+- [Postman collection](docs/postman/Shopster.postman_collection.json)
+- [Triage & project workflow](docs/triage-guide.md)
 - [Deployment runbook](docs/deployment-notes.md)
 
 ---
@@ -220,3 +222,11 @@ Released under the [MIT License](LICENSE). You’re free to use the code in comm
 - **Feedback:** please open an issue or use the contact details in the GitHub profile.
 
 > Contributions, ideas, and reviews are always welcome!
+
+---
+
+## 🖼 Screenshots
+
+| Home | Catalog |
+| --- | --- |
+| ![Home](https://image.thum.io/get/width/800/crop/800/http://159.89.27.194:3000/) | ![Catalog](https://image.thum.io/get/width/800/crop/800/http://159.89.27.194:3000/products) |

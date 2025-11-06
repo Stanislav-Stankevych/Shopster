@@ -1,0 +1,108 @@
+{
+  "info": {
+    "_postman_id": "9b6f8e90-2d39-4c6c-8f77-5c2047aa1f00",
+    "name": "Shopster API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Sample API requests against the Shopster backend."
+  },
+  "item": [
+    {
+      "name": "List products",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/products/?page_size=6",
+          "host": ["{{base_url}}"],
+          "path": ["api", "products", ""],
+          "query": [
+            {
+              "key": "page_size",
+              "value": "6"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Product detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/products/{{product_slug}}/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "products", "{{product_slug}}", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Authenticate (JWT)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create order (guest checkout)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cart_id\": \"{{cart_id}}\",\n  \"customer_email\": \"guest@example.com\",\n  \"customer_phone\": \"+7 999 000 1122\",\n  \"shipping_full_name\": \"Guest Buyer\",\n  \"shipping_address\": \"Lenina 1\",\n  \"shipping_city\": \"Moscow\",\n  \"shipping_postcode\": \"101000\",\n  \"shipping_country\": \"Russia\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/orders/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "orders", ""]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://159.89.27.194:8000"
+    },
+    {
+      "key": "product_slug",
+      "value": "aromadiffuzor-breeze"
+    },
+    {
+      "key": "username",
+      "value": "demo"
+    },
+    {
+      "key": "password",
+      "value": "demo-pass"
+    },
+    {
+      "key": "cart_id",
+      "value": "00000000-0000-0000-0000-000000000000"
+    }
+  ]
+}

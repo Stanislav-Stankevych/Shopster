@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & support
+    url: https://github.com/StanislavDjango/Shopster/discussions
+    about: Please start a discussion for general questions or support.

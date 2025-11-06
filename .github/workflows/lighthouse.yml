@@ -1,0 +1,19 @@
+name: Lighthouse Audit
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # every Monday at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Lighthouse against production
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            http://159.89.27.194:3000/
+            http://159.89.27.194:3000/products
+          uploadArtifacts: true
+          temporaryPublicStorage: true

@@ -10,5 +10,6 @@ All notable changes to this project will be documented in this file.
 - Docker Compose setup for local development and production.
 - CI pipelines for backend/frontend linting and smoke tests.
 - Documentation: README, deployment notes, architecture overview, API examples.
+- Repository hygiene: PR/issue templates, Release Drafter, Lighthouse audit, Postman collection, triage guide.
 
 > Create a tagged release with `git tag v1.0.0 && git push origin v1.0.0` to generate a GitHub Release (see `.github/workflows/release.yml`).

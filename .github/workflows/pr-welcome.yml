@@ -13,12 +13,13 @@ jobs:
         with:
           script: |
             const body = [
-              `👋 Thanks for submitting a pull request!`,
-              `Please make sure you have run the local quality gates listed in the PR template.`,
-              `CI will let us know if anything else needs attention.`
+              'Thanks for submitting a pull request!',
+              'Please run the local quality checks listed in the PR template (lint, tests).',
+              'The CI pipeline will highlight anything else that needs attention.'
             ].join('\n\n');
             await github.rest.issues.createComment({
               ...context.repo,
               issue_number: context.payload.pull_request.number,
-              body
+              body,
             });
+

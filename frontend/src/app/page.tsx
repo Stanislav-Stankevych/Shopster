@@ -3,8 +3,35 @@ import { ProductCard } from "@/components/ProductCard";
 import Link from "next/link";
 import { BACKEND_ORIGIN } from "@/lib/config";
 
+export const revalidate = 60;
+
+const FEATURED_PRODUCT_LIMIT = 6;
+
+const FEATURE_CARDS = [
+  {
+    title: "Catalog & orders",
+    description:
+      "Manage products, categories, carts and orders from the Django admin or via API endpoints.",
+  },
+  {
+    title: "Algolia search",
+    description: "Instant search with facets, typo tolerance and configurable ranking.",
+  },
+  {
+    title: "Next.js storefront",
+    description:
+      "Modern UX with server components, ready for static generation or server rendering.",
+  },
+];
+
 export default async function HomePage() {
-  const products = await fetchProducts(6);
+  let products = [] as Awaited<ReturnType<typeof fetchProducts>>;
+
+  try {
+    products = await fetchProducts(FEATURED_PRODUCT_LIMIT);
+  } catch (error) {
+    console.error("Failed to fetch featured products:", error);
+  }
 
   return (
     <>
@@ -50,23 +77,12 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="feature-grid">
-            <div className="feature-card">
-              <h3>Catalog & orders</h3>
-              <p>
-                Manage products, categories, carts and orders from the Django admin or via API
-                endpoints.
-              </p>
-            </div>
-            <div className="feature-card">
-              <h3>Algolia search</h3>
-              <p>Instant search with facets, typo tolerance and configurable ranking.</p>
-            </div>
-            <div className="feature-card">
-              <h3>Next.js storefront</h3>
-              <p>
-                Modern UX with server components, ready for static generation or server rendering.
-              </p>
-            </div>
+            {FEATURE_CARDS.map(({ title, description }) => (
+              <div className="feature-card" key={title}>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
